@@ -558,6 +558,17 @@ const DashboardPage = () => {
   };
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
 
+  const swipeStartX = useRef(null);
+  const handleSwipeStart = (e) => { swipeStartX.current = e.touches[0].clientX; };
+  const handleSwipeEnd = (e) => {
+    if (swipeStartX.current === null) return;
+    const diff = swipeStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) < 50) return;
+    if (diff > 0) viewMode === 'day' ? shiftDay(1) : shiftWeek(1);
+    else viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1);
+    swipeStartX.current = null;
+  };
+
   const shopHours = shop?.shop_hours || [];
   const startHour = shopHours.length
     ? Math.min(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.open_time, 10)))
@@ -666,7 +677,7 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Tarih gezintisi */}
-                <div className="flex flex-1 min-w-0 items-center gap-1">
+                <div className="flex flex-1 min-w-0 items-center gap-1" onTouchStart={handleSwipeStart} onTouchEnd={handleSwipeEnd}>
                   <button
                     onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
                     className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
