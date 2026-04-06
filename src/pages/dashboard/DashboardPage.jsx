@@ -564,7 +564,7 @@ const DashboardPage = () => {
 
   return (
     <div className="bg-zinc-50 h-dvh w-full overflow-hidden">
-      <div className="w-full max-w-md mx-auto h-full flex flex-col">
+      <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
         <div className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
@@ -666,7 +666,7 @@ const DashboardPage = () => {
 
         {/* Orta scroll alanı */}
         {tab === 'program' ? (
-          <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+7rem)]">
             {viewMode === 'day'
               ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} date={date} />
               : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} />
