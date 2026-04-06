@@ -165,18 +165,24 @@ const BarbersSection = ({ shop, onUpdated }) => {
 };
 
 // ─── Hizmetler ──────────────────────────────────────────────────────
+const ServiceFields = [
+  { label: 'Hizmet Adı', key: 'name', placeholder: 'Saç Kesimi', type: 'text' },
+  { label: 'Süre (dk)', key: 'durationMin', placeholder: '30', type: 'number' },
+  { label: 'Buffer (dk)', key: 'bufferMin', placeholder: '5', type: 'number' },
+];
+
 const ServicesSection = ({ shop, onUpdated }) => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', durationMin: '', bufferMin: '5' });
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
 
   const activeServices = shop?.services?.filter(s => s.is_active !== false) || [];
 
   const handleAdd = async () => {
-    if (!form.name || !form.durationMin) {
-      alert('Ad ve süre zorunludur.');
-      return;
-    }
+    if (!form.name || !form.durationMin) { alert('Ad ve süre zorunludur.'); return; }
     setSaving(true);
     try {
       await api.post('/shops/services', {
@@ -194,6 +200,29 @@ const ServicesSection = ({ shop, onUpdated }) => {
     }
   };
 
+  const startEdit = (s) => {
+    setEditingId(s.id);
+    setEditForm({ name: s.name, durationMin: String(s.duration_min), bufferMin: String(s.buffer_min) });
+  };
+
+  const handleUpdate = async () => {
+    if (!editForm.name || !editForm.durationMin) { alert('Ad ve süre zorunludur.'); return; }
+    setEditSaving(true);
+    try {
+      await api.patch(`/shops/services/${editingId}`, {
+        name: editForm.name,
+        durationMin: parseInt(editForm.durationMin),
+        bufferMin: parseInt(editForm.bufferMin) || 5,
+      });
+      setEditingId(null);
+      onUpdated();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Güncellenemedi.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const handleDeactivate = async (id, name) => {
     if (!window.confirm(`"${name}" hizmetini kaldırmak istediğinize emin misiniz?`)) return;
     try {
@@ -207,19 +236,48 @@ const ServicesSection = ({ shop, onUpdated }) => {
   return (
     <div className="pt-4 space-y-3">
       {activeServices.map(s => (
-        <div key={s.id} className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl">
-          <div>
-            <div className="text-sm font-bold">{s.name}</div>
-            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-              {s.duration_min} dk + {s.buffer_min} dk buffer
+        <div key={s.id}>
+          {editingId === s.id ? (
+            <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200">
+              <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Düzenle</p>
+              {ServiceFields.map(({ label, key, placeholder, type }) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+                  <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={editForm[key]}
+                    onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
+                    min={type === 'number' ? '1' : undefined}
+                    className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                  />
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Button onClick={handleUpdate} loading={editSaving}>Kaydet</Button>
+                <Button variant="secondary" onClick={() => setEditingId(null)}>İptal</Button>
+                <button
+                  onClick={() => { setEditingId(null); handleDeactivate(s.id, s.name); }}
+                  className="ml-auto text-[10px] font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors"
+                >
+                  Kaldır
+                </button>
+              </div>
             </div>
-          </div>
-          <button
-            onClick={() => handleDeactivate(s.id, s.name)}
-            className="text-[10px] font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors"
-          >
-            Kaldır
-          </button>
+          ) : (
+            <button
+              onClick={() => startEdit(s)}
+              className="w-full flex items-center justify-between p-3 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-colors text-left"
+            >
+              <div>
+                <div className="text-sm font-bold">{s.name}</div>
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  {s.duration_min} dk + {s.buffer_min} dk buffer
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Düzenle ›</span>
+            </button>
+          )}
         </div>
       ))}
 
@@ -233,11 +291,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
       ) : (
         <div className="p-4 bg-zinc-50 rounded-2xl space-y-3">
           <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Yeni Hizmet</p>
-          {[
-            { label: 'Hizmet Adı', key: 'name', placeholder: 'Saç Kesimi', type: 'text' },
-            { label: 'Süre (dakika)', key: 'durationMin', placeholder: '30', type: 'number' },
-            { label: 'Buffer (dakika)', key: 'bufferMin', placeholder: '5', type: 'number' },
-          ].map(({ label, key, placeholder, type }) => (
+          {ServiceFields.map(({ label, key, placeholder, type }) => (
             <div key={key}>
               <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
               <input

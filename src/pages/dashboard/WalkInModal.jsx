@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import Button from '../../components/Button';
 
 const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
   const [form, setForm] = useState({
     barberId: currentUser.isOwner ? '' : currentUser.barberId,
-    serviceId: '',
+    serviceId:
+      shop.services.find(s => s.is_active !== false && s.name?.trim() === 'Saç Kesimi')?.id || '',
     startsAt: initialStartsAt || '',
     fullName: '',
     phone: '',
   });
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (form.serviceId) return;
+
+    const defaultService = shop.services.find(
+      s => s.is_active !== false && s.name?.trim() === 'Saç Kesimi'
+    );
+
+    if (defaultService?.id) {
+      setForm(prev => ({ ...prev, serviceId: defaultService.id }));
+    }
+  }, [form.serviceId, shop.services]);
 
   const selectedService = shop.services.find(s => s.id === form.serviceId);
 
