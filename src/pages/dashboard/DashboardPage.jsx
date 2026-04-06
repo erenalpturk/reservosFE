@@ -1,494 +1,13 @@
 import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
-import Button from '../../components/Button';
 import WalkInModal from './WalkInModal';
 import SettingsTab from './SettingsTab';
+import DetailModal from './DetailModal';
+import DayView from './DayView';
+import WeekView from './WeekView';
 import { useAuthStore } from '../../stores/authStore';
-
-// ─── Sabitler ───────────────────────────────────────────────────────────────
-
-const STATUS_LABELS = {
-  pending: 'Bekliyor',
-  confirmed: 'Onaylandı',
-  rejected: 'Reddedildi',
-  cancelled_by_customer: 'Müşteri İptal',
-  cancelled_by_shop: 'Dükkan İptal',
-  expired: 'Süresi Doldu',
-  completed: 'Tamamlandı',
-  no_show: 'Gelmedi',
-};
-
-
-const STATUS_DOT = {
-  pending: 'bg-orange-400',
-  confirmed: 'bg-green-400',
-  completed: 'bg-blue-400',
-  no_show: 'bg-red-400',
-  rejected: 'bg-zinc-300',
-  cancelled_by_customer: 'bg-zinc-300',
-  cancelled_by_shop: 'bg-zinc-300',
-  expired: 'bg-zinc-300',
-};
-
-const STATUS_COLORS = {
-  pending: 'bg-orange-100 text-orange-600',
-  confirmed: 'bg-green-100 text-green-600',
-  rejected: 'bg-zinc-100 text-zinc-400',
-  cancelled_by_customer: 'bg-zinc-100 text-zinc-400',
-  cancelled_by_shop: 'bg-zinc-100 text-zinc-400',
-  expired: 'bg-zinc-100 text-zinc-400',
-  completed: 'bg-blue-100 text-blue-600',
-  no_show: 'bg-red-100 text-red-500',
-};
-
-const DAY_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-
-// ─── Yardımcı fonksiyonlar ───────────────────────────────────────────────────
-
-function toLocalDate(s) {
-  const [y, m, d] = s.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function getWeekDays(ws) {
-  const [y, m, d] = ws.split('-').map(Number);
-  return Array.from({ length: 7 }, (_, i) => {
-    const dt = new Date(y, m - 1, d + i);
-    return dt.toISOString().split('T')[0];
-  });
-}
-
-function getMondayOf(s) {
-  const d = toLocalDate(s);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  return d.toISOString().split('T')[0];
-}
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
-
-function fmtTime(iso) {
-  return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-}
-
-// ─── Randevu Detay Popup ─────────────────────────────────────────────────────
-
-const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
-  const [loading, setLoading] = useState(null);
-  const isPast = new Date(appt.starts_at) < new Date();
-
-  const doAction = async (action) => {
-    setLoading(action);
-    try { await onAction(appt.id, action); onClose(); }
-    catch { alert('İşlem başarısız.'); setLoading(null); }
-  };
-
-  const doCancel = async () => {
-    if (!window.confirm('Randevuyu iptal etmek istediğinize emin misiniz?')) return;
-    setLoading('cancel');
-    try { await onCancel(appt.id); onClose(); }
-    catch { alert('İptal başarısız.'); setLoading(null); }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-fadeIn">
-
-        {/* Başlık satırı */}
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <div className="font-black text-xl uppercase tracking-tight leading-tight">
-              {appt.phone_customers?.full_name || 'Walk-In'}
-            </div>
-            {appt.phone_customers?.phone && (
-              <div className="text-xs font-bold text-zinc-400 mt-0.5">{appt.phone_customers.phone}</div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[appt.status] || 'bg-zinc-100 text-zinc-400'}`}>
-              {STATUS_LABELS[appt.status]}
-            </span>
-            <button onClick={onClose} className="text-zinc-300 hover:text-zinc-700 font-black text-xl leading-none">✕</button>
-          </div>
-        </div>
-
-        {/* Detaylar */}
-        <div className="bg-zinc-50 rounded-2xl px-4 py-3 space-y-2 mb-4 text-sm">
-          <div className="flex items-center gap-2.5">
-            <span className="opacity-40">📅</span>
-            <span className="font-bold text-zinc-700">
-              {new Date(appt.starts_at).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'long' })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="opacity-40">⏱</span>
-            <span className="font-bold text-zinc-700">{fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="opacity-40">✂️</span>
-            <span className="font-bold text-zinc-700">{appt.services?.name}</span>
-            <span className="text-xs text-zinc-400">({appt.services?.duration_min} dk)</span>
-          </div>
-          {user?.isOwner && appt.barbers && (
-            <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: appt.barbers.color_hex }} />
-              <span className="font-bold text-zinc-700">{appt.barbers.full_name}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Aksiyonlar */}
-        {appt.status === 'pending' && (
-          <div className="flex gap-2">
-            <Button variant="primary" loading={loading === 'confirm'} onClick={() => doAction('confirm')}>Onayla</Button>
-            <Button variant="secondary" loading={loading === 'reject'} onClick={() => doAction('reject')}>Reddet</Button>
-          </div>
-        )}
-        {appt.status === 'confirmed' && !isPast && (
-          <Button variant="danger" loading={loading === 'cancel'} onClick={doCancel}>İptal Et</Button>
-        )}
-        {appt.status === 'confirmed' && isPast && (
-          <div className="flex gap-2">
-            <Button variant="primary" loading={loading === 'complete'} onClick={() => doAction('complete')}>Tamamlandı</Button>
-            <Button variant="secondary" loading={loading === 'no-show'} onClick={() => doAction('no-show')}>Gelmedi</Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ─── Çakışma hesaplama ───────────────────────────────────────────────────────
-
-function computeColumns(appointments) {
-  // Her randevuya column index ve toplam column sayısı ata
-  const sorted = [...appointments].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
-  const columns = []; // columns[i] = son biten zaman
-
-  const result = sorted.map(appt => {
-    const start = new Date(appt.starts_at).getTime();
-    const end = new Date(appt.ends_at).getTime();
-    let col = columns.findIndex(colEnd => colEnd <= start);
-    if (col === -1) { col = columns.length; columns.push(end); }
-    else { columns[col] = end; }
-    return { appt, col };
-  });
-
-  // Her randevu için çakıştığı grubun genişliğini bul
-  return result.map(({ appt, col }) => {
-    const start = new Date(appt.starts_at).getTime();
-    const end = new Date(appt.ends_at).getTime();
-    // Bu randevu ile çakışan diğerlerini bul
-    const overlapping = result.filter(({ appt: other }) => {
-      const os = new Date(other.starts_at).getTime();
-      const oe = new Date(other.ends_at).getTime();
-      return os < end && oe > start;
-    });
-    const totalCols = Math.max(...overlapping.map(o => o.col)) + 1;
-    return { appt, col, totalCols };
-  });
-}
-
-// ─── Gün Görünümü ────────────────────────────────────────────────────────────
-
-function useNowLine(dateStr, startHour, endHour) {
-  const [nowTop, setNowTop] = useState(null);
-
-  useEffect(() => {
-    const calc = () => {
-      const today = todayStr();
-      if (dateStr !== today) { setNowTop(null); return; }
-      const now = new Date();
-      const min = now.getHours() * 60 + now.getMinutes() - startHour * 60;
-      if (min < 0 || min > (endHour - startHour) * 60) { setNowTop(null); return; }
-      setNowTop(min * PX_PER_MIN);
-    };
-    calc();
-    const iv = setInterval(calc, 60000);
-    return () => clearInterval(iv);
-  }, [dateStr, startHour, endHour]);
-
-  return nowTop;
-}
-
-const DayView = ({ appointments, loading, onSelect, date, startHour, endHour }) => {
-  const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
-  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
-  const nowTop = useNowLine(date, startHour, endHour);
-
-  if (loading) return (
-    <div className="flex justify-center py-12">
-      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 border-t-transparent rounded-full" />
-    </div>
-  );
-
-  const positioned = computeColumns(appointments);
-
-  return (
-    <div className="h-full overflow-y-auto overflow-x-hidden rounded-xl">
-      <div className="flex" style={{ height: `${totalHeight}px`, position: 'relative' }}>
-
-        {/* Saat etiketleri */}
-        <div className="flex-shrink-0 relative" style={{ width: '36px' }}>
-          {hours.map(h => (
-            <div
-              key={h}
-              className="absolute text-[9px] font-bold text-zinc-300 leading-none text-right pr-1.5"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
-            >
-              {h}:00
-            </div>
-          ))}
-        </div>
-
-        {/* Randevu kolonu */}
-        <div className="flex-1 relative">
-          {/* Saat çizgileri */}
-          {hours.map(h => (
-            <div
-              key={h}
-              className="absolute left-0 right-0 border-t border-zinc-100"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
-            />
-          ))}
-          {/* Yarım saat çizgileri */}
-          {hours.map(h => (
-            <div
-              key={`${h}h`}
-              className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
-            />
-          ))}
-
-          {/* Şu anki saat çizgisi */}
-          {nowTop !== null && (
-            <div
-              className="absolute left-0 right-0 z-10 pointer-events-none flex items-center"
-              style={{ top: `${nowTop}px` }}
-            >
-              <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 -ml-1" />
-              <div className="flex-1 h-px bg-red-500" />
-            </div>
-          )}
-
-          {appointments.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 pointer-events-none">
-              <div className="text-3xl">☕️</div>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Henüz randevu yok</p>
-            </div>
-          )}
-
-          {positioned.map(({ appt, col, totalCols }) => {
-            const { top, height } = getApptPos(appt, startHour);
-            const color = appt.barbers?.color_hex || '#71717a';
-            const GAP = 2;
-            const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
-            const colL = `calc(${GAP}px + (${col} * (100% - ${GAP * (totalCols + 1)}px) / ${totalCols}) + ${col * GAP}px)`;
-            return (
-              <button
-                key={appt.id}
-                onClick={() => onSelect(appt)}
-                className="absolute rounded-l overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.98] flex items-stretch"
-                style={{
-                  top: `${top}px`,
-                  height: `${height}px`,
-                  left: colL,
-                  width: colW,
-                  backgroundColor: color + '18',
-                  borderLeft: `3px solid ${color}`,
-                }}
-              >
-                <div className="flex items-center gap-1.5 px-2 py-1 flex-1 min-w-0">
-                  {/* Saat */}
-                  <div className="flex-shrink-0">
-                    <div className="text-[10px] font-black text-zinc-700 whitespace-nowrap">{fmtTime(appt.starts_at)}</div>
-                    {height > 28 && (
-                      <div className="text-[9px] font-bold text-zinc-300 whitespace-nowrap">{fmtTime(appt.ends_at)}</div>
-                    )}
-                  </div>
-
-                  {height > 20 && totalCols < 3 && (
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-xs uppercase tracking-tight truncate leading-tight text-zinc-800">
-                        {appt.phone_customers?.full_name || 'Walk-In'}
-                      </div>
-                      {height > 34 && (
-                        <div className="text-[9px] font-bold text-zinc-400 truncate">{appt.services?.name}</div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex-shrink-0 flex items-center">
-                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300'}`} />
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Hafta Görünümü ──────────────────────────────────────────────────────────
-
-const PX_PER_MIN = 0.8; // 48px/saat
-
-function getApptPos(appt, startHour) {
-  const start = new Date(appt.starts_at);
-  const end = new Date(appt.ends_at);
-  const startMin = start.getHours() * 60 + start.getMinutes() - startHour * 60;
-  const durMin = (end - start) / 60000;
-  return {
-    top: Math.max(0, startMin * PX_PER_MIN),
-    height: Math.max(14, durMin * PX_PER_MIN),
-  };
-}
-
-const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, startHour, endHour }) => {
-  const today = todayStr();
-  const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
-  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
-  const nowTop = useNowLine(today, startHour, endHour);
-
-  const byDay = {};
-  weekDays.forEach(d => { byDay[d] = []; });
-  appointments.forEach(appt => {
-    const day = appt.starts_at.split('T')[0];
-    if (byDay[day]) byDay[day].push(appt);
-  });
-
-  if (loading) return (
-    <div className="flex justify-center py-12">
-      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 border-t-transparent rounded-full" />
-    </div>
-  );
-
-  return (
-    <div className="h-full overflow-y-auto">
-      {/* Gün başlıkları */}
-      <div className="sticky top-0 z-20 bg-zinc-50 pb-1.5 flex" style={{ paddingLeft: '30px' }}>
-        {weekDays.map((day, i) => {
-          const isToday = day === today;
-          const hasPending = (byDay[day] || []).some(a => a.status === 'pending');
-          return (
-            <button
-              key={day}
-              onClick={() => onDayClick(day)}
-              className={`flex-1 rounded-lg py-1 mx-px text-center transition-all ${
-                isToday ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
-              }`}
-            >
-              <div className="text-[8px] font-black uppercase tracking-widest">{DAY_NAMES[i]}</div>
-              <div className="text-xs font-black leading-tight">{toLocalDate(day).getDate()}</div>
-              <div className={`w-1 h-1 rounded-full mx-auto mt-0.5 ${hasPending ? 'bg-orange-400' : 'bg-transparent'}`} />
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Saat grid */}
-      <div className="overflow-x-hidden overflow-y-hidden rounded-xl">
-        <div className="flex" style={{ height: `${totalHeight}px`, position: 'relative' }}>
-
-          {/* Saat etiketleri */}
-          <div className="flex-shrink-0 relative" style={{ width: '30px' }}>
-            {hours.map(h => (
-              <div
-                key={h}
-                className="absolute text-[8px] font-bold text-zinc-300 leading-none text-right pr-1"
-                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
-              >
-                {h}
-              </div>
-            ))}
-          </div>
-
-          {/* Gün kolonları */}
-          <div className="flex flex-1 relative">
-            {/* Saat çizgileri */}
-            {hours.map(h => (
-              <div
-                key={h}
-                className="absolute left-0 right-0 border-t border-zinc-100"
-                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
-              />
-            ))}
-            {/* Yarım saat çizgileri */}
-            {hours.map(h => (
-              <div
-                key={`${h}h`}
-                className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
-                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
-              />
-            ))}
-
-            {weekDays.map((day) => {
-              const dayAppts = byDay[day] || [];
-              const positioned = computeColumns(dayAppts);
-              const isToday = day === today;
-              return (
-                <div key={day} className="flex-1 relative mx-px">
-                  {/* Şu anki saat çizgisi — sadece bugün */}
-                  {isToday && nowTop !== null && (
-                    <div
-                      className="absolute left-0 right-0 z-10 pointer-events-none flex items-center"
-                      style={{ top: `${nowTop}px` }}
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                      <div className="flex-1 h-px bg-red-500" />
-                    </div>
-                  )}
-                  {positioned.map(({ appt, col, totalCols }) => {
-                    const { top, height } = getApptPos(appt, startHour);
-                    const color = appt.barbers?.color_hex || '#71717a';
-                    const GAP = 1;
-                    const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
-                    const colL = `calc(${GAP}px + ${col} * ((100% - ${GAP * (totalCols + 1)}px) / ${totalCols} + ${GAP}px))`;
-                    return (
-                      <button
-                        key={appt.id}
-                        onClick={() => onSelect(appt)}
-                        className="absolute rounded overflow-hidden text-left transition-opacity hover:opacity-80 active:scale-[0.97]"
-                        style={{
-                          top: `${top}px`,
-                          height: `${height}px`,
-                          left: colL,
-                          width: colW,
-                          backgroundColor: color + '28',
-                          borderLeft: `2px solid ${color}`,
-                        }}
-                      >
-                        <div className="px-0.5 pt-px">
-                          <div className="text-[7px] font-black leading-tight truncate" style={{ color }}>
-                            {fmtTime(appt.starts_at)}
-                          </div>
-                          {height > 22 && totalCols < 3 && (
-                            <div className="text-[7px] font-bold text-zinc-500 truncate leading-tight">
-                              {(appt.phone_customers?.full_name || 'Walk').split(' ')[0]}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-    </div>
-  );
-};
-
-// ─── Ana Dashboard ───────────────────────────────────────────────────────────
+import { todayStr, getMondayOf, getWeekDays, toLocalDate, toDateStr } from './utils';
 
 const DashboardPage = () => {
   const [tab, setTab] = useState('program');
@@ -500,6 +19,7 @@ const DashboardPage = () => {
   const [shop, setShop] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showWalkIn, setShowWalkIn] = useState(false);
+  const [walkInStartsAt, setWalkInStartsAt] = useState(null);
   const [contentHeight, setContentHeight] = useState('auto');
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -542,12 +62,6 @@ const DashboardPage = () => {
     fetchAppointments();
   };
 
-  const toDateStr = (dt) => {
-    const y = dt.getFullYear();
-    const mo = String(dt.getMonth() + 1).padStart(2, '0');
-    const d = String(dt.getDate()).padStart(2, '0');
-    return `${y}-${mo}-${d}`;
-  };
   const shiftWeek = (dir) => {
     const [y, m, d] = weekStart.split('-').map(Number);
     setWeekStart(toDateStr(new Date(y, m - 1, d + dir * 7)));
@@ -557,6 +71,7 @@ const DashboardPage = () => {
     setDate(toDateStr(new Date(y, m - 1, d + dir)));
   };
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
+
 
   const shopHours = shop?.shop_hours || [];
   const startHour = shopHours.length
@@ -606,7 +121,7 @@ const DashboardPage = () => {
 
         {/* Üst sabit blok */}
         <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
-          {/* ── Header kompakt ── */}
+          {/* ── Header ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-black uppercase tracking-tighter">
@@ -646,11 +161,11 @@ const DashboardPage = () => {
             ))}
           </div>
 
-          {/* Kontrol satırı */}
+          {/* ── Kontrol satırı ── */}
           {tab === 'program' && (
             <div className="px-5 pb-3">
               <div className="flex items-center gap-1.5">
-                {/* Gün/Hafta */}
+                {/* Gün/Hafta toggle */}
                 <div className="flex bg-white border-2 border-zinc-100 rounded-xl overflow-hidden flex-shrink-0">
                   {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
                     <button
@@ -706,7 +221,7 @@ const DashboardPage = () => {
         {tab === 'program' ? (
           <div className="min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} date={date} startHour={startHour} endHour={endHour} />
+              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} startHour={startHour} endHour={endHour} />
               : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
           </div>
@@ -716,7 +231,7 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Alt sabit bilgi tabı */}
+        {/* Alt özet */}
         {tab === 'program' && (
           <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 bg-white/95 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
             <div className="flex items-center justify-between mb-2 px-1">
@@ -753,8 +268,9 @@ const DashboardPage = () => {
         <WalkInModal
           shop={shop}
           currentUser={user}
-          onClose={() => setShowWalkIn(false)}
+          onClose={() => { setShowWalkIn(false); setWalkInStartsAt(null); }}
           onSuccess={fetchAppointments}
+          initialStartsAt={walkInStartsAt}
         />
       )}
     </div>

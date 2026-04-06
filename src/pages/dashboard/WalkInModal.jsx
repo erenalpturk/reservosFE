@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import api from '../../lib/api';
 import Button from '../../components/Button';
 
-const WalkInModal = ({ shop, currentUser, onClose, onSuccess }) => {
+const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
   const [form, setForm] = useState({
     barberId: currentUser.isOwner ? '' : currentUser.barberId,
     serviceId: '',
-    startsAt: '',
+    startsAt: initialStartsAt || '',
     fullName: '',
     phone: '',
   });
