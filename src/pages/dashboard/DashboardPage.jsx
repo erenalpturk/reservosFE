@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import Button from '../../components/Button';
@@ -195,7 +195,7 @@ function computeColumns(appointments) {
 
 // ─── Gün Görünümü ────────────────────────────────────────────────────────────
 
-function useNowLine(dateStr) {
+function useNowLine(dateStr, startHour, endHour) {
   const [nowTop, setNowTop] = useState(null);
 
   useEffect(() => {
@@ -203,20 +203,22 @@ function useNowLine(dateStr) {
       const today = todayStr();
       if (dateStr !== today) { setNowTop(null); return; }
       const now = new Date();
-      const min = now.getHours() * 60 + now.getMinutes() - START_HOUR * 60;
-      if (min < 0 || min > (END_HOUR - START_HOUR) * 60) { setNowTop(null); return; }
+      const min = now.getHours() * 60 + now.getMinutes() - startHour * 60;
+      if (min < 0 || min > (endHour - startHour) * 60) { setNowTop(null); return; }
       setNowTop(min * PX_PER_MIN);
     };
     calc();
     const iv = setInterval(calc, 60000);
     return () => clearInterval(iv);
-  }, [dateStr]);
+  }, [dateStr, startHour, endHour]);
 
   return nowTop;
 }
 
-const DayView = ({ appointments, loading, onSelect, date }) => {
-  const nowTop = useNowLine(date);
+const DayView = ({ appointments, loading, onSelect, date, startHour, endHour }) => {
+  const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
+  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+  const nowTop = useNowLine(date, startHour, endHour);
 
   if (loading) return (
     <div className="flex justify-center py-12">
@@ -227,16 +229,16 @@ const DayView = ({ appointments, loading, onSelect, date }) => {
   const positioned = computeColumns(appointments);
 
   return (
-    <div className="overflow-x-hidden rounded-xl">
-      <div className="flex" style={{ height: `${TOTAL_HEIGHT}px`, position: 'relative' }}>
+    <div className="h-full overflow-y-auto overflow-x-hidden rounded-xl">
+      <div className="flex" style={{ height: `${totalHeight}px`, position: 'relative' }}>
 
         {/* Saat etiketleri */}
         <div className="flex-shrink-0 relative" style={{ width: '36px' }}>
-          {HOURS.map(h => (
+          {hours.map(h => (
             <div
               key={h}
               className="absolute text-[9px] font-bold text-zinc-300 leading-none text-right pr-1.5"
-              style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
+              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
             >
               {h}:00
             </div>
@@ -246,19 +248,19 @@ const DayView = ({ appointments, loading, onSelect, date }) => {
         {/* Randevu kolonu */}
         <div className="flex-1 relative">
           {/* Saat çizgileri */}
-          {HOURS.map(h => (
+          {hours.map(h => (
             <div
               key={h}
               className="absolute left-0 right-0 border-t border-zinc-100"
-              style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN}px` }}
+              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
             />
           ))}
           {/* Yarım saat çizgileri */}
-          {HOURS.map(h => (
+          {hours.map(h => (
             <div
               key={`${h}h`}
               className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
-              style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
+              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
             />
           ))}
 
@@ -281,7 +283,7 @@ const DayView = ({ appointments, loading, onSelect, date }) => {
           )}
 
           {positioned.map(({ appt, col, totalCols }) => {
-            const { top, height } = getApptPos(appt);
+            const { top, height } = getApptPos(appt, startHour);
             const color = appt.barbers?.color_hex || '#71717a';
             const GAP = 2;
             const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
@@ -335,16 +337,12 @@ const DayView = ({ appointments, loading, onSelect, date }) => {
 
 // ─── Hafta Görünümü ──────────────────────────────────────────────────────────
 
-const START_HOUR = 9;
-const END_HOUR = 21;
 const PX_PER_MIN = 0.8; // 48px/saat
-const TOTAL_HEIGHT = (END_HOUR - START_HOUR) * 60 * PX_PER_MIN;
-const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
-function getApptPos(appt) {
+function getApptPos(appt, startHour) {
   const start = new Date(appt.starts_at);
   const end = new Date(appt.ends_at);
-  const startMin = start.getHours() * 60 + start.getMinutes() - START_HOUR * 60;
+  const startMin = start.getHours() * 60 + start.getMinutes() - startHour * 60;
   const durMin = (end - start) / 60000;
   return {
     top: Math.max(0, startMin * PX_PER_MIN),
@@ -352,9 +350,11 @@ function getApptPos(appt) {
   };
 }
 
-const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => {
+const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, startHour, endHour }) => {
   const today = todayStr();
-  const nowTop = useNowLine(today); // haftalık görünümde bugünün sütununda gösterilir
+  const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
+  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+  const nowTop = useNowLine(today, startHour, endHour);
 
   const byDay = {};
   weekDays.forEach(d => { byDay[d] = []; });
@@ -370,9 +370,9 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
   );
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto">
       {/* Gün başlıkları */}
-      <div className="flex mb-1.5" style={{ paddingLeft: '30px' }}>
+      <div className="sticky top-0 z-20 bg-zinc-50 pb-1.5 flex" style={{ paddingLeft: '30px' }}>
         {weekDays.map((day, i) => {
           const isToday = day === today;
           const hasPending = (byDay[day] || []).some(a => a.status === 'pending');
@@ -393,16 +393,16 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
       </div>
 
       {/* Saat grid */}
-      <div className="overflow-x-hidden rounded-xl">
-        <div className="flex" style={{ height: `${TOTAL_HEIGHT}px`, position: 'relative' }}>
+      <div className="overflow-x-hidden overflow-y-hidden rounded-xl">
+        <div className="flex" style={{ height: `${totalHeight}px`, position: 'relative' }}>
 
           {/* Saat etiketleri */}
           <div className="flex-shrink-0 relative" style={{ width: '30px' }}>
-            {HOURS.map(h => (
+            {hours.map(h => (
               <div
                 key={h}
                 className="absolute text-[8px] font-bold text-zinc-300 leading-none text-right pr-1"
-                style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
+                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
               >
                 {h}
               </div>
@@ -412,19 +412,19 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
           {/* Gün kolonları */}
           <div className="flex flex-1 relative">
             {/* Saat çizgileri */}
-            {HOURS.map(h => (
+            {hours.map(h => (
               <div
                 key={h}
                 className="absolute left-0 right-0 border-t border-zinc-100"
-                style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN}px` }}
+                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
               />
             ))}
             {/* Yarım saat çizgileri */}
-            {HOURS.map(h => (
+            {hours.map(h => (
               <div
                 key={`${h}h`}
                 className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
-                style={{ top: `${(h - START_HOUR) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
+                style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
               />
             ))}
 
@@ -445,7 +445,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
                     </div>
                   )}
                   {positioned.map(({ appt, col, totalCols }) => {
-                    const { top, height } = getApptPos(appt);
+                    const { top, height } = getApptPos(appt, startHour);
                     const color = appt.barbers?.color_hex || '#71717a';
                     const GAP = 1;
                     const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
@@ -500,8 +500,11 @@ const DashboardPage = () => {
   const [shop, setShop] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [showWalkIn, setShowWalkIn] = useState(false);
+  const [contentHeight, setContentHeight] = useState('auto');
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const topFixedRef = useRef(null);
+  const bottomFixedRef = useRef(null);
 
   const weekDays = getWeekDays(weekStart);
 
@@ -539,17 +542,29 @@ const DashboardPage = () => {
     fetchAppointments();
   };
 
+  const toDateStr = (dt) => {
+    const y = dt.getFullYear();
+    const mo = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${d}`;
+  };
   const shiftWeek = (dir) => {
     const [y, m, d] = weekStart.split('-').map(Number);
-    const dt = new Date(y, m - 1, d + dir * 7);
-    setWeekStart(dt.toISOString().split('T')[0]);
+    setWeekStart(toDateStr(new Date(y, m - 1, d + dir * 7)));
   };
   const shiftDay = (dir) => {
     const [y, m, d] = date.split('-').map(Number);
-    const dt = new Date(y, m - 1, d + dir);
-    setDate(dt.toISOString().split('T')[0]);
+    setDate(toDateStr(new Date(y, m - 1, d + dir)));
   };
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
+
+  const shopHours = shop?.shop_hours || [];
+  const startHour = shopHours.length
+    ? Math.min(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.open_time, 10)))
+    : 9;
+  const endHour = shopHours.length
+    ? Math.max(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.close_time, 10)))
+    : 21;
 
   const pendingCount = appointments.filter(a => a.status === 'pending').length;
   const programSummary = [
@@ -562,12 +577,35 @@ const DashboardPage = () => {
     ? toLocalDate(date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
     : `${toLocalDate(weekDays[0]).getDate()}-${toLocalDate(weekDays[6]).getDate()} ${toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}`;
 
+  useLayoutEffect(() => {
+    const updateContentHeight = () => {
+      const topHeight = topFixedRef.current?.offsetHeight || 0;
+      const bottomHeight = tab === 'program' ? (bottomFixedRef.current?.offsetHeight || 0) : 0;
+      setContentHeight(`calc(100dvh - ${topHeight + bottomHeight}px)`);
+    };
+
+    updateContentHeight();
+
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateContentHeight);
+      if (topFixedRef.current) ro.observe(topFixedRef.current);
+      if (bottomFixedRef.current) ro.observe(bottomFixedRef.current);
+    }
+
+    window.addEventListener('resize', updateContentHeight);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateContentHeight);
+    };
+  }, [tab, viewMode]);
+
   return (
     <div className="bg-zinc-50 h-dvh w-full overflow-hidden">
       <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
-        <div className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
+        <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
           {/* ── Header kompakt ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3">
             <div className="flex items-center gap-2">
@@ -666,21 +704,21 @@ const DashboardPage = () => {
 
         {/* Orta scroll alanı */}
         {tab === 'program' ? (
-          <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+7rem)]">
+          <div className="min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} date={date} />
-              : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} />
+              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} date={date} startHour={startHour} endHour={endHour} />
+              : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
             <SettingsTab shop={shop} user={user} onShopUpdated={fetchShop} />
           </div>
         )}
 
         {/* Alt sabit bilgi tabı */}
         {tab === 'program' && (
-          <div className="flex-shrink-0 border-t border-zinc-200 bg-white/95 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+          <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 bg-white/95 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
                 {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
