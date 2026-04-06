@@ -123,9 +123,14 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
 
 // ─── Dükkan Kartı ───────────────────────────────────────────────────────────
 
+const emptyBarberForm = { fullName: '', email: '', password: '', colorHex: '#7F77DD' };
+
 const ShopCard = ({ shop, onUpdated }) => {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showAddBarber, setShowAddBarber] = useState(false);
+  const [barberForm, setBarberForm] = useState(emptyBarberForm);
+  const [barberSaving, setBarberSaving] = useState(false);
 
   const toggleActive = async () => {
     if (!window.confirm(`Dükkan "${shop.name}" ${shop.is_active ? 'pasife alınacak' : 'aktive edilecek'}. Emin misiniz?`)) return;
@@ -150,13 +155,31 @@ const ShopCard = ({ shop, onUpdated }) => {
   };
 
   const toggleOwner = async (barberId, currentOwner) => {
-    if (currentOwner) return; // sahipliği kaldırma şimdilik
+    if (currentOwner) return;
     if (!window.confirm('Bu berberi dükkan sahibi yapacaksınız. Emin misiniz?')) return;
     try {
       await api.patch(`/admin/barbers/${barberId}`, { is_owner: true });
       onUpdated();
     } catch {
       alert('İşlem başarısız.');
+    }
+  };
+
+  const handleAddBarber = async () => {
+    if (!barberForm.email || !barberForm.password || !barberForm.fullName) {
+      alert('E-posta, şifre ve ad zorunludur.');
+      return;
+    }
+    setBarberSaving(true);
+    try {
+      await api.post(`/admin/shops/${shop.id}/barbers`, barberForm);
+      setBarberForm(emptyBarberForm);
+      setShowAddBarber(false);
+      onUpdated();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Berber eklenemedi.');
+    } finally {
+      setBarberSaving(false);
     }
   };
 
@@ -241,6 +264,49 @@ const ShopCard = ({ shop, onUpdated }) => {
               </div>
             </div>
           ))}
+
+          {/* Berber Ekle */}
+          {!showAddBarber ? (
+            <button
+              onClick={() => setShowAddBarber(true)}
+              className="w-full p-3 border-2 border-dashed border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 transition-all mt-2"
+            >
+              + Berber Ekle
+            </button>
+          ) : (
+            <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200 mt-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Yeni Berber</p>
+              {[
+                { label: 'Ad Soyad', key: 'fullName', placeholder: 'Ahmet Usta', type: 'text' },
+                { label: 'E-posta', key: 'email', placeholder: 'ahmet@mail.com', type: 'email' },
+                { label: 'Şifre', key: 'password', placeholder: '••••••••', type: 'password' },
+              ].map(({ label, key, placeholder, type }) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+                  <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={barberForm[key]}
+                    onChange={e => setBarberForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                  />
+                </div>
+              ))}
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Renk</label>
+                <input
+                  type="color"
+                  value={barberForm.colorHex}
+                  onChange={e => setBarberForm(f => ({ ...f, colorHex: e.target.value }))}
+                  className="h-10 w-full rounded-2xl border-2 border-zinc-100 cursor-pointer"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAddBarber} loading={barberSaving}>Ekle</Button>
+                <Button variant="secondary" onClick={() => { setShowAddBarber(false); setBarberForm(emptyBarberForm); }}>İptal</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

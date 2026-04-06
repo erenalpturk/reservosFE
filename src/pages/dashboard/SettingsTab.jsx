@@ -66,6 +66,9 @@ const BarbersSection = ({ shop, onUpdated }) => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', fullName: '', colorHex: '#7F77DD' });
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
 
   const activeBarbers = shop?.barbers?.filter(b => b.is_active !== false) || [];
 
@@ -88,32 +91,90 @@ const BarbersSection = ({ shop, onUpdated }) => {
   };
 
   const handleDeactivate = async (id, name) => {
-    if (!window.confirm(`${name} adlı berberi deaktive etmek istediğinize emin misiniz?`)) return;
+    if (!window.confirm(`${name} adlı berberi kaldırmak istediğinize emin misiniz?`)) return;
     try {
       await api.delete(`/shops/barbers/${id}`);
+      setEditingId(null);
       onUpdated();
     } catch {
       alert('İşlem başarısız.');
     }
   };
 
+  const startEdit = (b) => {
+    setEditingId(b.id);
+    setEditForm({ fullName: b.full_name, colorHex: b.color_hex });
+  };
+
+  const handleUpdate = async () => {
+    if (!editForm.fullName) { alert('Ad zorunludur.'); return; }
+    setEditSaving(true);
+    try {
+      await api.patch(`/shops/barbers/${editingId}`, {
+        full_name: editForm.fullName,
+        color_hex: editForm.colorHex,
+      });
+      setEditingId(null);
+      onUpdated();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Güncellenemedi.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   return (
     <div className="pt-4 space-y-3">
       {activeBarbers.map(b => (
-        <div key={b.id} className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: b.color_hex }} />
-            <div>
-              <div className="text-sm font-bold">{b.full_name}</div>
-              {b.is_owner && <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Sahip</div>}
+        <div key={b.id}>
+          {editingId === b.id ? (
+            <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200">
+              <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Düzenle</p>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
+                <input
+                  type="text"
+                  placeholder="Ahmet Usta"
+                  value={editForm.fullName}
+                  onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
+                  className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Renk</label>
+                <input
+                  type="color"
+                  value={editForm.colorHex}
+                  onChange={e => setEditForm({ ...editForm, colorHex: e.target.value })}
+                  className="h-10 w-full rounded-2xl border-2 border-zinc-100 cursor-pointer"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleUpdate} loading={editSaving}>Kaydet</Button>
+                <Button variant="secondary" onClick={() => setEditingId(null)}>İptal</Button>
+                {!b.is_owner && (
+                  <button
+                    onClick={() => { setEditingId(null); handleDeactivate(b.id, b.full_name); }}
+                    className="ml-auto text-[10px] font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors"
+                  >
+                    Kaldır
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          {!b.is_owner && (
+          ) : (
             <button
-              onClick={() => handleDeactivate(b.id, b.full_name)}
-              className="text-[10px] font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors"
+              onClick={() => startEdit(b)}
+              className="w-full flex items-center justify-between p-3 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-colors text-left"
             >
-              Kaldır
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: b.color_hex }} />
+                <div>
+                  <div className="text-sm font-bold">{b.full_name}</div>
+                  {b.is_owner && <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Sahip</div>}
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Düzenle ›</span>
             </button>
           )}
         </div>
@@ -124,7 +185,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
           onClick={() => setShowForm(true)}
           className="w-full p-3 border-2 border-dashed border-zinc-200 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 transition-all"
         >
-          + Berber Davet Et
+          + Berber Ekle
         </button>
       ) : (
         <div className="p-4 bg-zinc-50 rounded-2xl space-y-3">

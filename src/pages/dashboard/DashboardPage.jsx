@@ -4,6 +4,7 @@ import api from '../../lib/api';
 import WalkInModal from './WalkInModal';
 import SettingsTab from './SettingsTab';
 import DetailModal from './DetailModal';
+import PendingAppointmentsModal from './PendingAppointmentsModal';
 import DayView from './DayView';
 import WeekView from './WeekView';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,9 +16,13 @@ const DashboardPage = () => {
   const [date, setDate] = useState(todayStr());
   const [weekStart, setWeekStart] = useState(getMondayOf(todayStr()));
   const [appointments, setAppointments] = useState([]);
+  const [allPendingAppointments, setAllPendingAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [shop, setShop] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
+  const [highlightApptId, setHighlightApptId] = useState(null);
+  const [highlightTick, setHighlightTick] = useState(0);
+  const [showPendingModal, setShowPendingModal] = useState(false);
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInStartsAt, setWalkInStartsAt] = useState(null);
   const [contentHeight, setContentHeight] = useState('auto');
@@ -45,7 +50,22 @@ const DashboardPage = () => {
     finally { setLoading(false); }
   }, [viewMode, date, weekStart]);
 
+  const fetchAllPendingAppointments = useCallback(async () => {
+    try {
+      const r = await api.get('/appointments');
+      const pending = (r.data.appointments || []).filter(a => a.status === 'pending');
+      setAllPendingAppointments(pending);
+    } catch (e) { console.error(e); }
+  }, []);
+
   useEffect(() => { fetchShop(); }, []);
+
+  useEffect(() => {
+    fetchAllPendingAppointments();
+    const iv = setInterval(fetchAllPendingAppointments, 30000);
+    return () => clearInterval(iv);
+  }, [fetchAllPendingAppointments]);
+
   useEffect(() => {
     if (tab !== 'program') return;
     fetchAppointments();
@@ -55,11 +75,11 @@ const DashboardPage = () => {
 
   const handleAction = async (id, action) => {
     await api.patch(`/appointments/${id}/${action}`);
-    fetchAppointments();
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments()]);
   };
   const handleCancel = async (id) => {
     await api.delete(`/appointments/${id}`);
-    fetchAppointments();
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments()]);
   };
 
   const shiftWeek = (dir) => {
@@ -81,10 +101,10 @@ const DashboardPage = () => {
     ? Math.max(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.close_time, 10)))
     : 21;
 
-  const pendingCount = appointments.filter(a => a.status === 'pending').length;
+  const pendingCount = allPendingAppointments.length;
   const programSummary = [
     { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700' },
-    { label: 'Bekleyen', count: appointments.filter(a => a.status === 'pending').length, cls: 'text-orange-500' },
+    { label: 'Bekleyen', count: pendingCount, cls: 'text-orange-500' },
     { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
     { label: 'Tamam', count: appointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
   ];
@@ -115,6 +135,12 @@ const DashboardPage = () => {
     };
   }, [tab, viewMode]);
 
+  useEffect(() => {
+    if (!highlightApptId) return undefined;
+    const to = setTimeout(() => setHighlightApptId(null), 5000);
+    return () => clearTimeout(to);
+  }, [highlightApptId, highlightTick]);
+
   return (
     <div className="bg-zinc-50 h-dvh w-full overflow-hidden">
       <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
@@ -137,6 +163,19 @@ const DashboardPage = () => {
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
                 {user?.fullName}
               </span>
+              <button
+                type="button"
+                onClick={() => setShowPendingModal(true)}
+                className="relative h-8 w-8 border-2 border-zinc-200 rounded-xl text-sm text-zinc-500 hover:border-orange-300 hover:text-orange-500 transition-all"
+                aria-label="Bekleyen randevu bildirimlerini aç"
+              >
+                🔔
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-orange-400 text-white text-[9px] leading-4 font-black">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={() => { logout(); navigate('/login'); }}
                 className="px-3 py-1.5 border-2 border-zinc-200 rounded-xl text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
@@ -221,8 +260,8 @@ const DashboardPage = () => {
         {tab === 'program' ? (
           <div className="min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} startHour={startHour} endHour={endHour} />
-              : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
+              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} startHour={startHour} endHour={endHour} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} highlightApptId={highlightApptId} highlightTick={highlightTick} />
             }
           </div>
         ) : (
@@ -253,6 +292,29 @@ const DashboardPage = () => {
           </div>
         )}
       </div>
+
+      {showPendingModal && (
+        <PendingAppointmentsModal
+          appointments={allPendingAppointments}
+          user={user}
+          onClose={() => setShowPendingModal(false)}
+          onShowInCalendar={(appt, mode) => {
+            const apptDay = appt.starts_at?.split('T')[0];
+            if (!apptDay) return;
+            setTab('program');
+            setDate(apptDay);
+            setWeekStart(getMondayOf(apptDay));
+            setViewMode(mode);
+            setHighlightApptId(appt.id);
+            setHighlightTick(v => v + 1);
+            setShowPendingModal(false);
+          }}
+          onSelect={(appt) => {
+            setShowPendingModal(false);
+            setSelectedAppt(appt);
+          }}
+        />
+      )}
 
       {selectedAppt && (
         <DetailModal

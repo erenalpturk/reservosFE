@@ -25,6 +25,7 @@ const CustomerPage = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [contactInfo, setContactInfo] = useState({ fullName: '', phone: '' });
   const [otpCode, setOtpCode] = useState('');
+  const [sentOtp, setSentOtp] = useState('');
 
   // Tarih kısıtları: bugün - 14 gün ileri
   const today = new Date().toISOString().split('T')[0];
@@ -85,9 +86,11 @@ const CustomerPage = () => {
       const formattedPhone = contactInfo.phone.startsWith('+90')
         ? contactInfo.phone
         : `+90${contactInfo.phone.replace(/^0/, '')}`;
-      await api.post('/otp/send', { phone: formattedPhone });
+      const response = await api.post('/otp/send', { phone: formattedPhone });
+      setSentOtp(response.data?.otp || '');
       setStep(6);
     } catch (err) {
+      setSentOtp('');
       alert(err.response?.data?.error || 'Kod gönderilemedi.');
     } finally {
       setSubmitting(false);
@@ -124,6 +127,7 @@ const CustomerPage = () => {
         setSelectedDate('');
         setSelectedSlot(null);
         setContactInfo({ fullName: '', phone: '' });
+        setSentOtp('');
       } else {
         alert(data?.error || 'Rezervasyon başarısız.');
       }
@@ -291,6 +295,11 @@ const CustomerPage = () => {
         {step === 6 && (
           <div className="animate-fadeIn">
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Doğrulama</h2>
+            {sentOtp && (
+              <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-900 uppercase tracking-widest">
+                Test OTP: {sentOtp}
+              </div>
+            )}
             <p className="text-xs font-bold text-zinc-400 mb-4 px-1 uppercase tracking-widest">SMS ile gelen 6 haneli kodu girin</p>
             <Input
               placeholder="000000"
@@ -308,7 +317,7 @@ const CustomerPage = () => {
               Randevuyu Tamamla
             </Button>
             <button
-              onClick={() => { setOtpCode(''); setStep(5); }}
+              onClick={() => { setOtpCode(''); setSentOtp(''); setStep(5); }}
               className="w-full mt-3 text-xs font-bold text-zinc-400 uppercase tracking-widest py-2 hover:text-zinc-700 transition-colors"
             >
               Kodu Tekrar Gönder

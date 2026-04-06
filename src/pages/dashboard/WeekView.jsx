@@ -1,11 +1,18 @@
+import { useEffect, useRef } from 'react';
 import { DAY_NAMES, PX_PER_MIN, todayStr, toLocalDate, fmtTime, computeColumns, getApptPos } from './utils';
 import { useNowLine } from './hooks/useNowLine';
 
-const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, startHour, endHour }) => {
+const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, startHour, endHour, highlightApptId, highlightTick }) => {
   const today = todayStr();
   const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
   const nowTop = useNowLine(today, startHour, endHour);
+  const highlightRef = useRef(null);
+
+  useEffect(() => {
+    if (!highlightRef.current) return;
+    highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }, [highlightApptId, highlightTick, appointments.length]);
 
   const byDay = {};
   weekDays.forEach(d => { byDay[d] = []; });
@@ -97,14 +104,16 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
                   {positioned.map(({ appt, col, totalCols }) => {
                     const { top, height } = getApptPos(appt, startHour);
                     const color = appt.barbers?.color_hex || '#71717a';
+                    const isHighlighted = appt.id === highlightApptId;
                     const GAP = 1;
                     const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
                     const colL = `calc(${GAP}px + ${col} * ((100% - ${GAP * (totalCols + 1)}px) / ${totalCols} + ${GAP}px))`;
                     return (
                       <button
-                        key={appt.id}
+                        key={isHighlighted ? `${appt.id}-${highlightTick}` : appt.id}
+                        ref={isHighlighted ? highlightRef : null}
                         onClick={() => onSelect(appt)}
-                        className="absolute rounded overflow-hidden text-left transition-opacity hover:opacity-80 active:scale-[0.97]"
+                        className={`absolute rounded overflow-hidden text-left transition-opacity hover:opacity-80 active:scale-[0.97] ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 z-20' : ''}`}
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,

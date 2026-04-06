@@ -1,10 +1,17 @@
+import { useEffect, useRef } from 'react';
 import { PX_PER_MIN, STATUS_DOT, fmtTime, computeColumns, getApptPos } from './utils';
 import { useNowLine } from './hooks/useNowLine';
 
-const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour, endHour }) => {
+const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour, endHour, highlightApptId, highlightTick }) => {
   const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
   const nowTop = useNowLine(date, startHour, endHour);
+  const highlightRef = useRef(null);
+
+  useEffect(() => {
+    if (!highlightRef.current) return;
+    highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }, [highlightApptId, highlightTick, appointments.length]);
 
   const handleGridClick = (e) => {
     if (!onTimeClick) return;
@@ -82,14 +89,16 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
           {positioned.map(({ appt, col, totalCols }) => {
             const { top, height } = getApptPos(appt, startHour);
             const color = appt.barbers?.color_hex || '#71717a';
+            const isHighlighted = appt.id === highlightApptId;
             const GAP = 2;
             const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
             const colL = `calc(${GAP}px + (${col} * (100% - ${GAP * (totalCols + 1)}px) / ${totalCols}) + ${col * GAP}px)`;
             return (
               <button
-                key={appt.id}
+                key={isHighlighted ? `${appt.id}-${highlightTick}` : appt.id}
+                ref={isHighlighted ? highlightRef : null}
                 onClick={(e) => { e.stopPropagation(); onSelect(appt); }}
-                className="absolute rounded-l overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.98] flex items-stretch"
+                className={`absolute rounded-l overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.98] flex items-stretch ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1 z-20' : ''}`}
                 style={{
                   top: `${top}px`,
                   height: `${height}px`,
