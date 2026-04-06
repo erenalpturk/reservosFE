@@ -227,7 +227,7 @@ const DayView = ({ appointments, loading, onSelect, date }) => {
   const positioned = computeColumns(appointments);
 
   return (
-    <div className="overflow-y-auto overflow-x-hidden rounded-xl" style={{ maxHeight: '520px' }}>
+    <div className="overflow-x-hidden rounded-xl">
       <div className="flex" style={{ height: `${TOTAL_HEIGHT}px`, position: 'relative' }}>
 
         {/* Saat etiketleri */}
@@ -393,7 +393,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
       </div>
 
       {/* Saat grid */}
-      <div className="overflow-y-auto overflow-x-hidden rounded-xl" style={{ maxHeight: '440px' }}>
+      <div className="overflow-x-hidden rounded-xl">
         <div className="flex" style={{ height: `${TOTAL_HEIGHT}px`, position: 'relative' }}>
 
           {/* Saat etiketleri */}
@@ -484,20 +484,6 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick }) => 
         </div>
       </div>
 
-      {/* Hafta özeti */}
-      <div className="flex gap-2 mt-3">
-        {[
-          { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700' },
-          { label: 'Bekleyen', count: appointments.filter(a => a.status === 'pending').length, cls: 'text-orange-500' },
-          { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
-          { label: 'Tamam', count: appointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
-        ].map(({ label, count, cls }) => (
-          <div key={label} className="flex-1 bg-white rounded-xl p-2 border border-zinc-100 text-center">
-            <div className={`text-base font-black ${cls}`}>{count}</div>
-            <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{label}</div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
@@ -566,114 +552,152 @@ const DashboardPage = () => {
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
 
   const pendingCount = appointments.filter(a => a.status === 'pending').length;
+  const programSummary = [
+    { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700' },
+    { label: 'Bekleyen', count: appointments.filter(a => a.status === 'pending').length, cls: 'text-orange-500' },
+    { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
+    { label: 'Tamam', count: appointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
+  ];
+  const summaryTitle = viewMode === 'day'
+    ? toLocalDate(date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
+    : `${toLocalDate(weekDays[0]).getDate()}-${toLocalDate(weekDays[6]).getDate()} ${toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}`;
 
   return (
-    <div className="bg-zinc-50 min-h-screen w-full overflow-x-hidden">
-      <div className="w-full max-w-md mx-auto">
+    <div className="bg-zinc-50 h-dvh w-full overflow-hidden">
+      <div className="w-full max-w-md mx-auto h-full flex flex-col">
 
-        {/* ── Header kompakt ── */}
-        <div className="flex justify-between items-center px-5 pt-5 pb-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black uppercase tracking-tighter">
-              {tab === 'program' ? 'Program' : 'Ayarlar'}
-            </h1>
-            {tab === 'program' && pendingCount > 0 && (
-              <span className="px-1.5 py-0.5 bg-orange-400 text-white rounded-full text-[9px] font-black">
-                {pendingCount}
+        {/* Üst sabit blok */}
+        <div className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
+          {/* ── Header kompakt ── */}
+          <div className="flex justify-between items-center px-5 pt-5 pb-3">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black uppercase tracking-tighter">
+                {tab === 'program' ? 'Program' : 'Ayarlar'}
+              </h1>
+              {tab === 'program' && pendingCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-orange-400 text-white rounded-full text-[9px] font-black">
+                  {pendingCount}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+                {user?.fullName}
               </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
-              {user?.fullName}
-            </span>
-            <button
-              onClick={() => { logout(); navigate('/login'); }}
-              className="px-3 py-1.5 border-2 border-zinc-200 rounded-xl text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
-            >
-              Çıkış
-            </button>
-          </div>
-        </div>
-
-        {/* ── Tab Bar ── */}
-        <div className="flex gap-1.5 px-5 pb-3">
-          {[['program', '📅 Program'], ['ayarlar', '⚙️ Ayarlar']].map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setTab(val)}
-              className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                tab === val ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Program ── */}
-        {tab === 'program' && (
-          <div className="px-5 pb-10">
-            {/* Kontrol satırı */}
-            <div className="flex items-center gap-1.5 mb-3">
-              {/* Gün/Hafta */}
-              <div className="flex bg-white border-2 border-zinc-100 rounded-xl overflow-hidden flex-shrink-0">
-                {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setViewMode(val)}
-                    className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
-                      viewMode === val ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:text-zinc-700'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tarih gezintisi */}
-              <div className="flex flex-1 min-w-0 items-center gap-1">
-                <button
-                  onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
-                  className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
-                >‹</button>
-                {viewMode === 'day' ? (
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    className="flex-1 min-w-0 w-0 py-2 px-2 border-2 border-zinc-100 rounded-xl text-[10px] font-bold focus:border-zinc-900 focus:outline-none bg-white text-center uppercase"
-                  />
-                ) : (
-                  <div className="flex-1 min-w-0 py-2 px-2 bg-white border-2 border-zinc-100 rounded-xl text-[10px] font-black text-zinc-600 text-center uppercase tracking-widest truncate">
-                    {toLocalDate(weekDays[0]).getDate()}–{toLocalDate(weekDays[6]).getDate()}{' '}
-                    {toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}
-                  </div>
-                )}
-                <button
-                  onClick={() => viewMode === 'day' ? shiftDay(1) : shiftWeek(1)}
-                  className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
-                >›</button>
-              </div>
-
-              {/* Walk-in */}
               <button
-                onClick={() => setShowWalkIn(true)}
-                className="px-3 py-2 bg-zinc-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 flex-shrink-0"
+                onClick={() => { logout(); navigate('/login'); }}
+                className="px-3 py-1.5 border-2 border-zinc-200 rounded-xl text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
               >
-                +
+                Çıkış
               </button>
             </div>
+          </div>
 
+          {/* ── Tab Bar ── */}
+          <div className="flex gap-1.5 px-5 pb-3">
+            {[['program', '📅 Program'], ['ayarlar', '⚙️ Ayarlar']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setTab(val)}
+                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  tab === val ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Kontrol satırı */}
+          {tab === 'program' && (
+            <div className="px-5 pb-3">
+              <div className="flex items-center gap-1.5">
+                {/* Gün/Hafta */}
+                <div className="flex bg-white border-2 border-zinc-100 rounded-xl overflow-hidden flex-shrink-0">
+                  {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setViewMode(val)}
+                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        viewMode === val ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:text-zinc-700'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tarih gezintisi */}
+                <div className="flex flex-1 min-w-0 items-center gap-1">
+                  <button
+                    onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
+                    className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
+                  >‹</button>
+                  {viewMode === 'day' ? (
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={e => setDate(e.target.value)}
+                      className="flex-1 min-w-0 w-0 py-2 px-2 border-2 border-zinc-100 rounded-xl text-[10px] font-bold focus:border-zinc-900 focus:outline-none bg-white text-center uppercase"
+                    />
+                  ) : (
+                    <div className="flex-1 min-w-0 py-2 px-2 bg-white border-2 border-zinc-100 rounded-xl text-[10px] font-black text-zinc-600 text-center uppercase tracking-widest truncate">
+                      {toLocalDate(weekDays[0]).getDate()}–{toLocalDate(weekDays[6]).getDate()}{' '}
+                      {toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => viewMode === 'day' ? shiftDay(1) : shiftWeek(1)}
+                    className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
+                  >›</button>
+                </div>
+
+                {/* Walk-in */}
+                <button
+                  onClick={() => setShowWalkIn(true)}
+                  className="px-3 py-2 bg-zinc-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 flex-shrink-0"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Orta scroll alanı */}
+        {tab === 'program' ? (
+          <div className="flex-1 overflow-y-auto px-5 pt-3 pb-4">
             {viewMode === 'day'
               ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} date={date} />
               : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} />
             }
           </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            <SettingsTab shop={shop} user={user} onShopUpdated={fetchShop} />
+          </div>
         )}
 
-        {tab === 'ayarlar' && (
-          <SettingsTab shop={shop} user={user} onShopUpdated={fetchShop} />
+        {/* Alt sabit bilgi tabı */}
+        {tab === 'program' && (
+          <div className="flex-shrink-0 border-t border-zinc-200 bg-white/95 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
+                {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                {summaryTitle}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              {programSummary.map(({ label, count, cls }) => (
+                <div key={label} className="flex-1 bg-white rounded-xl p-2 border border-zinc-100 text-center">
+                  <div className={`text-base font-black ${cls}`}>{count}</div>
+                  <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
