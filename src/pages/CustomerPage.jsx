@@ -1,0 +1,334 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../lib/api';
+import StepIndicator from '../components/StepIndicator';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
+
+const CustomerPage = () => {
+  const [searchParams] = useSearchParams();
+  const shopSlug = searchParams.get('shop');
+
+  const [shop, setShop] = useState(null);
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form State
+  const [selectedService, setSelectedService] = useState(null);
+  const [selectedBarber, setSelectedBarber] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [availability, setAvailability] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [contactInfo, setContactInfo] = useState({ fullName: '', phone: '' });
+  const [otpCode, setOtpCode] = useState('');
+
+  // Tarih kısıtları: bugün - 14 gün ileri
+  const today = new Date().toISOString().split('T')[0];
+  const maxDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  useEffect(() => {
+    if (shopSlug) {
+      fetchShopData();
+    } else {
+      setError('Dükkan belirtilmedi.');
+      setLoading(false);
+    }
+  }, [shopSlug]);
+
+  const fetchShopData = async () => {
+    try {
+      const response = await api.get(`/shops/${shopSlug}`);
+      setShop(response.data.shop);
+      setLoading(false);
+    } catch (err) {
+      setError('Dükkan bulunamadı.');
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailability = async (date) => {
+    if (!selectedService) return;
+    setLoadingSlots(true);
+    try {
+      const response = await api.get('/availability', {
+        params: { shop: shopSlug, service: selectedService.id, date }
+      });
+      setAvailability(response.data.availability);
+    } catch (err) {
+      console.error('Müsaitlik hatası:', err);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handlePhoneBlur = async () => {
+    const phone = contactInfo.phone;
+    if (!phone || phone.length < 10) return;
+    try {
+      const formatted = phone.startsWith('+90') ? phone : `+90${phone.replace(/^0/, '')}`;
+      const res = await api.get('/otp/customer-name', { params: { phone: formatted } });
+      if (res.data.fullName && !contactInfo.fullName) {
+        setContactInfo(prev => ({ ...prev, fullName: res.data.fullName }));
+      }
+    } catch {
+      // Sessizce geç — kayıtlı değilse sorun değil
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setSubmitting(true);
+    try {
+      const formattedPhone = contactInfo.phone.startsWith('+90')
+        ? contactInfo.phone
+        : `+90${contactInfo.phone.replace(/^0/, '')}`;
+      await api.post('/otp/send', { phone: formattedPhone });
+      setStep(6);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Kod gönderilemedi.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    setSubmitting(true);
+    try {
+      const formattedPhone = contactInfo.phone.startsWith('+90')
+        ? contactInfo.phone
+        : `+90${contactInfo.phone.replace(/^0/, '')}`;
+      const payload = {
+        phone: formattedPhone,
+        otpCode,
+        fullName: contactInfo.fullName,
+        shopId: shop.id,
+        barberId: selectedBarber.id,
+        serviceId: selectedService.id,
+        startsAt: selectedSlot.startsAt,
+        endsAt: selectedSlot.endsAt,
+      };
+      await api.post('/appointments', payload);
+      setStep(7);
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.code === 'max_attempts_exceeded') {
+        alert('Çok fazla yanlış deneme. Lütfen baştan başlayın.');
+        // Sıfırla ve başa dön
+        setOtpCode('');
+        setStep(1);
+        setSelectedService(null);
+        setSelectedBarber(null);
+        setSelectedDate('');
+        setSelectedSlot(null);
+        setContactInfo({ fullName: '', phone: '' });
+      } else {
+        alert(data?.error || 'Rezervasyon başarısız.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const goBack = () => setStep(s => s - 1);
+
+  if (loading) return (
+    <div className="flex justify-center p-20">
+      <div className="animate-spin h-8 w-8 border-4 border-zinc-900 border-t-transparent rounded-full"></div>
+    </div>
+  );
+  if (error) return <div className="p-20 text-red-500 text-center font-bold">{error}</div>;
+
+  const currentBarberSlots = availability.find(a => a.barber.id === selectedBarber?.id)?.slots || [];
+
+  return (
+    <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl pb-10 flex flex-col animate-fadeIn">
+      <div className="bg-zinc-900 text-white p-8">
+        <h1 className="text-2xl font-black uppercase tracking-tighter italic">{shop.name}</h1>
+        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">{shop.address}</p>
+      </div>
+
+      <StepIndicator currentStep={step} />
+
+      <div className="p-6 flex-1">
+        {/* ADIM 1 — Hizmet Seçimi */}
+        {step === 1 && (
+          <div className="animate-fadeIn">
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Hizmet Seçin</h2>
+            <div className="space-y-3">
+              {shop.services.map(s => (
+                <Card
+                  key={s.id}
+                  onClick={() => { setSelectedService(s); setStep(2); }}
+                  className="flex justify-between items-center"
+                >
+                  <span className="font-bold">{s.name}</span>
+                  <span className="text-xs font-bold px-2 py-1 bg-zinc-100 text-zinc-600 rounded-lg">{s.duration_min} dk</span>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ADIM 2 — Berber Seçimi */}
+        {step === 2 && (
+          <div className="animate-fadeIn">
+            <button onClick={goBack} className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 transition-colors">
+              ← Geri
+            </button>
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Berber Seçin</h2>
+            <div className="space-y-3">
+              {shop.barbers.map(b => (
+                <Card
+                  key={b.id}
+                  onClick={() => { setSelectedBarber(b); setStep(3); }}
+                  className="flex items-center gap-4"
+                >
+                  <div className="w-10 h-10 rounded-full shadow-inner flex-shrink-0" style={{ backgroundColor: b.color_hex }}></div>
+                  <span className="font-bold">{b.full_name}</span>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ADIM 3 — Tarih Seçimi */}
+        {step === 3 && (
+          <div className="animate-fadeIn">
+            <button onClick={goBack} className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 transition-colors">
+              ← Geri
+            </button>
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Tarih Seçin</h2>
+            <Input
+              type="date"
+              label="Randevu Tarihi"
+              min={today}
+              max={maxDate}
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                fetchAvailability(e.target.value);
+                setStep(4);
+              }}
+            />
+          </div>
+        )}
+
+        {/* ADIM 4 — Saat Seçimi */}
+        {step === 4 && (
+          <div className="animate-fadeIn">
+            <button onClick={goBack} className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 transition-colors">
+              ← Geri
+            </button>
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">{selectedDate} — Saat</h2>
+            {loadingSlots ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin h-8 w-8 border-4 border-zinc-900 border-t-transparent rounded-full"></div>
+              </div>
+            ) : currentBarberSlots.length === 0 ? (
+              <div className="text-center py-12 animate-fadeIn">
+                <div className="text-4xl mb-4">📅</div>
+                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+                  Bu tarihte müsait saat yok.<br />Başka bir tarih seçin.
+                </p>
+                <button
+                  onClick={goBack}
+                  className="mt-6 text-xs font-bold text-zinc-900 uppercase tracking-widest underline underline-offset-4"
+                >
+                  Tarih Değiştir
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {currentBarberSlots.map((slot, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setSelectedSlot(slot); setStep(5); }}
+                    className="p-3 text-center border-2 border-zinc-50 rounded-2xl bg-zinc-50 font-bold text-xs hover:border-zinc-900 transition-all"
+                  >
+                    {new Date(slot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ADIM 5 — İletişim */}
+        {step === 5 && (
+          <div className="animate-fadeIn">
+            <button onClick={goBack} className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 transition-colors">
+              ← Geri
+            </button>
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">İletişim</h2>
+            <Input
+              label="Telefon"
+              placeholder="05XXXXXXXXX"
+              type="tel"
+              value={contactInfo.phone}
+              onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+              onBlur={handlePhoneBlur}
+            />
+            <Input
+              label="Ad Soyad"
+              placeholder="Ahmet Yılmaz"
+              value={contactInfo.fullName}
+              onChange={(e) => setContactInfo({ ...contactInfo, fullName: e.target.value })}
+            />
+            <Button
+              onClick={handleSendOtp}
+              loading={submitting}
+              className="mt-4"
+            >
+              Kod Gönder
+            </Button>
+          </div>
+        )}
+
+        {/* ADIM 6 — OTP Doğrulama */}
+        {step === 6 && (
+          <div className="animate-fadeIn">
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Doğrulama</h2>
+            <p className="text-xs font-bold text-zinc-400 mb-4 px-1 uppercase tracking-widest">SMS ile gelen 6 haneli kodu girin</p>
+            <Input
+              placeholder="000000"
+              maxLength={6}
+              tracking
+              center
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+            />
+            <Button
+              onClick={handleCompleteBooking}
+              loading={submitting}
+              className="mt-4"
+            >
+              Randevuyu Tamamla
+            </Button>
+            <button
+              onClick={() => { setOtpCode(''); setStep(5); }}
+              className="w-full mt-3 text-xs font-bold text-zinc-400 uppercase tracking-widest py-2 hover:text-zinc-700 transition-colors"
+            >
+              Kodu Tekrar Gönder
+            </button>
+          </div>
+        )}
+
+        {/* ADIM 7 — Başarı */}
+        {step === 7 && (
+          <div className="text-center py-16 animate-fadeIn">
+            <div className="text-7xl mb-8">👊</div>
+            <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">İstek Gönderildi!</h2>
+            <p className="text-sm font-bold text-zinc-400 leading-relaxed uppercase tracking-widest">
+              Berberiniz isteğinizi inceliyor.<br />Onay SMS ile gelecek.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CustomerPage;
