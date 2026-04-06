@@ -70,7 +70,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess }) => {
                 onChange={e => setForm({ ...form, barberId: e.target.value })}
                 className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
               >
-                <option value="">Berber seçin</option>
+                <option value={currentUser.barberId}>{currentUser.fullName}</option>
                 {activeBarbers.map(b => (
                   <option key={b.id} value={b.id}>{b.full_name}</option>
                 ))}
@@ -86,7 +86,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess }) => {
               onChange={e => setForm({ ...form, serviceId: e.target.value })}
               className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
             >
-              <option value="">Hizmet seçin</option>
+              <option value="">{activeServices[0]?.name || 'Hizmet seçin'}</option>
               {activeServices.map(s => (
                 <option key={s.id} value={s.id}>{s.name} ({s.duration_min} dk)</option>
               ))}
