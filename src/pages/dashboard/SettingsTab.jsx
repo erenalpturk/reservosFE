@@ -22,11 +22,17 @@ const Section = ({ title, children, defaultOpen = false }) => {
 };
 
 // ─── Dükkan Bilgileri ───────────────────────────────────────────────
-const ShopInfoSection = ({ shop, onUpdated }) => {
+const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
   const [form, setForm] = useState({ name: shop?.name || '', phone: shop?.phone || '', address: shop?.address || '' });
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const bookingLink = shop?.slug
+    ? `${window.location.origin}/?shop=${encodeURIComponent(shop.slug)}`
+    : '';
 
   const handleSave = async () => {
+    if (!canEdit) return;
     setSaving(true);
     try {
       await api.patch('/shops', form);
@@ -38,8 +44,56 @@ const ShopInfoSection = ({ shop, onUpdated }) => {
     }
   };
 
+  const handleCopyBookingLink = async () => {
+    if (!bookingLink) {
+      alert('Önce dükkan slug bilgisi gerekli.');
+      return;
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(bookingLink);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = bookingLink;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      alert('Link kopyalanamadı.');
+    }
+  };
+
   return (
     <div className="pt-4 space-y-3">
+      <div>
+        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">
+          Müşteri Rezervasyon Linki
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            readOnly
+            value={bookingLink}
+            placeholder="Link oluşturulamadı"
+            className="flex-1 p-3 border-2 border-zinc-100 rounded-2xl text-xs font-bold text-zinc-600 bg-zinc-50 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={handleCopyBookingLink}
+            className="px-3 py-3 border-2 border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-all"
+          >
+            {copied ? 'Kopyalandı' : 'Kopyala'}
+          </button>
+        </div>
+      </div>
+
       {[
         { label: 'Dükkan Adı', key: 'name', placeholder: 'Maestro Berber' },
         { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
@@ -52,11 +106,17 @@ const ShopInfoSection = ({ shop, onUpdated }) => {
             placeholder={placeholder}
             value={form[key]}
             onChange={e => setForm({ ...form, [key]: e.target.value })}
-            className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:border-zinc-900 focus:outline-none"
+            disabled={!canEdit}
+            className={`w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:border-zinc-900 focus:outline-none ${!canEdit ? 'bg-zinc-50 text-zinc-500 cursor-not-allowed' : ''}`}
           />
         </div>
       ))}
-      <Button onClick={handleSave} loading={saving}>Kaydet</Button>
+      {!canEdit && (
+        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+          Bu alan sadece dükkan sahibi tarafından düzenlenebilir.
+        </p>
+      )}
+      <Button onClick={handleSave} loading={saving} disabled={!canEdit}>Kaydet</Button>
     </div>
   );
 };
@@ -531,6 +591,8 @@ const BlockSection = ({ shop, user, onUpdated }) => {
 
 // ─── Ana Ayarlar Tab ────────────────────────────────────────────────
 const SettingsTab = ({ shop, user, onShopUpdated }) => {
+  const isOwner = user?.isOwner === true;
+
   if (!shop) {
     return (
       <div className="flex justify-center py-20">
@@ -541,11 +603,12 @@ const SettingsTab = ({ shop, user, onShopUpdated }) => {
 
   return (
     <div className="px-6 pb-10">
-      {user?.isOwner && (
+      <Section title="Dükkan Bilgileri" defaultOpen>
+        <ShopInfoSection shop={shop} onUpdated={onShopUpdated} canEdit={isOwner} />
+      </Section>
+
+      {isOwner && (
         <>
-          <Section title="Dükkan Bilgileri" defaultOpen>
-            <ShopInfoSection shop={shop} onUpdated={onShopUpdated} />
-          </Section>
           <Section title="Berberler">
             <BarbersSection shop={shop} onUpdated={onShopUpdated} />
           </Section>
