@@ -3,27 +3,62 @@ import { fmtTime } from './utils';
 
 const PendingAppointmentsModal = ({ appointments, user, onClose, onSelect, onShowInCalendar }) => {
   const [dragY, setDragY] = useState(0);
-  const touchStartYRef = useRef(null);
+  const dragYRef = useRef(0);
+  const dragStartYRef = useRef(null);
   const sortedAppointments = [...appointments].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
 
-  const handleSheetTouchStart = (e) => {
-    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
+  const beginDrag = (clientY) => {
+    dragStartYRef.current = clientY;
+    dragYRef.current = 0;
+    setDragY(0);
   };
 
-  const handleSheetTouchMove = (e) => {
-    if (touchStartYRef.current === null) return;
-    const currentY = e.touches?.[0]?.clientY ?? touchStartYRef.current;
-    const delta = currentY - touchStartYRef.current;
-    setDragY(delta > 0 ? delta : 0);
+  const updateDrag = (clientY) => {
+    if (dragStartYRef.current === null) return;
+    const delta = clientY - dragStartYRef.current;
+    const next = delta > 0 ? delta : 0;
+    dragYRef.current = next;
+    setDragY(next);
   };
 
-  const handleSheetTouchEnd = () => {
-    if (dragY > 90) {
+  const endDrag = () => {
+    dragStartYRef.current = null;
+    if (dragYRef.current > 60) {
       onClose();
       return;
     }
+    dragYRef.current = 0;
     setDragY(0);
-    touchStartYRef.current = null;
+  };
+
+  const handleSheetPointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    beginDrag(e.clientY);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const handleSheetPointerMove = (e) => {
+    updateDrag(e.clientY);
+  };
+
+  const handleSheetPointerEnd = () => {
+    endDrag();
+  };
+
+  const handleSheetTouchStart = (e) => {
+    const y = e.touches?.[0]?.clientY;
+    if (typeof y === 'number') beginDrag(y);
+  };
+
+  const handleSheetTouchMove = (e) => {
+    const y = e.touches?.[0]?.clientY;
+    if (typeof y !== 'number') return;
+    updateDrag(y);
+    if (dragStartYRef.current !== null) e.preventDefault();
+  };
+
+  const handleSheetTouchEnd = () => {
+    endDrag();
   };
 
   return (
@@ -40,21 +75,31 @@ const PendingAppointmentsModal = ({ appointments, user, onClose, onSelect, onSho
         style={{ transform: `translateY(${dragY}px)` }}
       >
         <div
-          className="pt-3 px-5"
+          className="pt-3 px-5 cursor-grab active:cursor-grabbing"
+          onPointerDown={handleSheetPointerDown}
+          onPointerMove={handleSheetPointerMove}
+          onPointerUp={handleSheetPointerEnd}
+          onPointerCancel={handleSheetPointerEnd}
           onTouchStart={handleSheetTouchStart}
           onTouchMove={handleSheetTouchMove}
           onTouchEnd={handleSheetTouchEnd}
           onTouchCancel={handleSheetTouchEnd}
+          style={{ touchAction: 'none' }}
         >
           <div className="mx-auto h-1.5 w-12 rounded-full bg-zinc-200" />
         </div>
 
         <div
-          className="flex items-start justify-between px-5 pt-3 pb-3 border-b border-zinc-100"
+          className="flex items-start justify-between px-5 pt-3 pb-3 border-b border-zinc-100 cursor-grab active:cursor-grabbing"
+          onPointerDown={handleSheetPointerDown}
+          onPointerMove={handleSheetPointerMove}
+          onPointerUp={handleSheetPointerEnd}
+          onPointerCancel={handleSheetPointerEnd}
           onTouchStart={handleSheetTouchStart}
           onTouchMove={handleSheetTouchMove}
           onTouchEnd={handleSheetTouchEnd}
           onTouchCancel={handleSheetTouchEnd}
+          style={{ touchAction: 'none' }}
         >
           <div>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-900">Bekleyen Randevular</h3>
