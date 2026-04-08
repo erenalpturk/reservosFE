@@ -1,16 +1,23 @@
 import React from 'react';
 
-const ThemeToggle = ({ isDark, onToggle }) => {
+const ThemeToggle = ({ isDark, onToggle, className = '' }) => {
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="fixed top-4 right-4 z-[120] flex items-center gap-2 px-3 py-2 rounded-xl border border-zinc-200 bg-white/90 backdrop-blur text-zinc-700 text-[10px] font-black uppercase tracking-widest shadow-sm hover:border-zinc-400 transition-all dark:bg-zinc-900/90 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+      className={`relative inline-flex h-7 w-12 items-center rounded-full border-2 border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 transition-colors hover:border-zinc-400 dark:hover:border-zinc-500 ${className}`}
       aria-label={isDark ? 'Aydinlik temaya gec' : 'Koyu temaya gec'}
       title={isDark ? 'Aydinlik tema' : 'Koyu tema'}
+      aria-pressed={isDark}
     >
-      <span className="text-sm leading-none" aria-hidden="true">{isDark ? '☀' : '☾'}</span>
-      <span>{isDark ? 'Aydinlik' : 'Koyu'}</span>
+      <span
+        className={`absolute left-0.5 top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white dark:bg-zinc-900 shadow-sm transition-transform ${
+          isDark ? 'translate-x-5' : 'translate-x-0'
+        }`}
+        aria-hidden="true"
+      >
+        <span className="text-[12px] leading-none">{isDark ? '☾' : '☀'}</span>
+      </span>
     </button>
   );
 };

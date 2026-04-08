@@ -7,10 +7,11 @@ import DetailModal from './DetailModal';
 import PendingAppointmentsModal from './PendingAppointmentsModal';
 import DayView from './DayView';
 import WeekView from './WeekView';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useAuthStore } from '../../stores/authStore';
 import { todayStr, getMondayOf, getWeekDays, toLocalDate, toDateStr } from './utils';
 
-const DashboardPage = () => {
+const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [tab, setTab] = useState('program');
   const [viewMode, setViewMode] = useState('day');
   const [date, setDate] = useState(todayStr());
@@ -148,8 +149,8 @@ const DashboardPage = () => {
         {/* Üst sabit blok */}
         <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
           {/* ── Header ── */}
-          <div className="flex justify-between items-center px-5 pt-5 pb-3">
-            <div className="flex items-center gap-2">
+          <div className="flex justify-between items-center px-5 pt-5 pb-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <h1 className="text-xl font-black uppercase tracking-tighter">
                 {tab === 'program' ? 'Program' : 'Ayarlar'}
               </h1>
@@ -159,10 +160,11 @@ const DashboardPage = () => {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest hidden sm:block">
-                {user?.fullName}
-              </span>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {onToggleTheme && (
+                <ThemeToggle isDark={!!isDark} onToggle={onToggleTheme} />
+              )}
               <button
                 type="button"
                 onClick={() => setShowPendingModal(true)}
@@ -178,9 +180,16 @@ const DashboardPage = () => {
               </button>
               <button
                 onClick={() => { logout(); navigate('/login'); }}
-                className="px-3 py-1.5 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-300 dark:hover:text-zinc-100 transition-all"
+                type="button"
+                className="h-8 w-8 inline-flex items-center justify-center border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-300 dark:hover:text-zinc-100 transition-all"
+                aria-label="Çıkış yap"
+                title="Çıkış"
               >
-                Çıkış
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
               </button>
             </div>
           </div>

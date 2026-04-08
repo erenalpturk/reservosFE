@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Button from '../../components/Button';
 import { STATUS_LABELS, STATUS_COLORS, fmtTime } from './utils';
 import { useToast } from '../../components/Toast';
 
 const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
   const [loading, setLoading] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const touchStartYRef = useRef(null);
   const toast = useToast();
   const isPast = new Date(appt.starts_at) < new Date();
+
+  const handleSheetTouchStart = (e) => {
+    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
+  };
+
+  const handleSheetTouchMove = (e) => {
+    if (touchStartYRef.current === null) return;
+    const currentY = e.touches?.[0]?.clientY ?? touchStartYRef.current;
+    const delta = currentY - touchStartYRef.current;
+    setDragY(delta > 0 ? delta : 0);
+  };
+
+  const handleSheetTouchEnd = () => {
+    if (dragY > 90) {
+      onClose();
+      return;
+    }
+    setDragY(0);
+    touchStartYRef.current = null;
+  };
 
   const doAction = async (action) => {
     setLoading(action);
@@ -15,8 +38,8 @@ const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
   };
 
   const doCancel = async () => {
-    if (!window.confirm('Randevuyu iptal etmek istediğinize emin misiniz?')) return;
     setLoading('cancel');
+    setShowCancelConfirm(false);
     try { await onCancel(appt.id); onClose(); }
     catch { toast('İptal başarısız.'); setLoading(null); }
   };
@@ -24,10 +47,29 @@ const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-fadeIn">
+      <div
+        className={`relative w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-900 transition-transform ${dragY > 0 ? 'duration-0' : 'duration-200'}`}
+        style={{ transform: `translateY(${dragY}px)` }}
+      >
+
+        <div
+          className="-mt-1 mb-3"
+          onTouchStart={handleSheetTouchStart}
+          onTouchMove={handleSheetTouchMove}
+          onTouchEnd={handleSheetTouchEnd}
+          onTouchCancel={handleSheetTouchEnd}
+        >
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-zinc-200" />
+        </div>
 
         {/* Başlık satırı */}
-        <div className="flex justify-between items-start mb-4">
+        <div
+          className="flex justify-between items-start mb-4"
+          onTouchStart={handleSheetTouchStart}
+          onTouchMove={handleSheetTouchMove}
+          onTouchEnd={handleSheetTouchEnd}
+          onTouchCancel={handleSheetTouchEnd}
+        >
           <div>
             <div className="font-black text-xl uppercase tracking-tight leading-tight">
               {appt.phone_customers?.full_name || 'Walk-In'}
@@ -77,7 +119,25 @@ const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
           </div>
         )}
         {appt.status === 'confirmed' && !isPast && (
-          <Button variant="danger" loading={loading === 'cancel'} onClick={doCancel}>İptal Et</Button>
+          showCancelConfirm ? (
+            <div className="space-y-2">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700 uppercase tracking-widest">
+                Randevuyu iptal etmek istediğinize emin misiniz?
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" disabled={loading === 'cancel'} onClick={() => setShowCancelConfirm(false)}>
+                  Vazgeç
+                </Button>
+                <Button variant="danger" loading={loading === 'cancel'} onClick={doCancel}>
+                  Evet, İptal Et
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="danger" loading={loading === 'cancel'} onClick={() => setShowCancelConfirm(true)}>
+              İptal Et
+            </Button>
+          )
         )}
         {appt.status === 'confirmed' && isPast && (
           <div className="flex gap-2">

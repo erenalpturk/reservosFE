@@ -1,7 +1,30 @@
+import { useRef, useState } from 'react';
 import { fmtTime } from './utils';
 
 const PendingAppointmentsModal = ({ appointments, user, onClose, onSelect, onShowInCalendar }) => {
+  const [dragY, setDragY] = useState(0);
+  const touchStartYRef = useRef(null);
   const sortedAppointments = [...appointments].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+
+  const handleSheetTouchStart = (e) => {
+    touchStartYRef.current = e.touches?.[0]?.clientY ?? null;
+  };
+
+  const handleSheetTouchMove = (e) => {
+    if (touchStartYRef.current === null) return;
+    const currentY = e.touches?.[0]?.clientY ?? touchStartYRef.current;
+    const delta = currentY - touchStartYRef.current;
+    setDragY(delta > 0 ? delta : 0);
+  };
+
+  const handleSheetTouchEnd = () => {
+    if (dragY > 90) {
+      onClose();
+      return;
+    }
+    setDragY(0);
+    touchStartYRef.current = null;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -12,10 +35,29 @@ const PendingAppointmentsModal = ({ appointments, user, onClose, onSelect, onSho
         className="absolute inset-0 bg-black/40"
       />
 
-      <div className="relative w-full max-w-md max-h-[82dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-fadeIn">
-        <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-zinc-100">
+      <div
+        className={`relative w-full max-w-md max-h-[82dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-fadeIn transition-transform ${dragY > 0 ? 'duration-0' : 'duration-200'}`}
+        style={{ transform: `translateY(${dragY}px)` }}
+      >
+        <div
+          className="pt-3 px-5"
+          onTouchStart={handleSheetTouchStart}
+          onTouchMove={handleSheetTouchMove}
+          onTouchEnd={handleSheetTouchEnd}
+          onTouchCancel={handleSheetTouchEnd}
+        >
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-zinc-200" />
+        </div>
+
+        <div
+          className="flex items-start justify-between px-5 pt-3 pb-3 border-b border-zinc-100"
+          onTouchStart={handleSheetTouchStart}
+          onTouchMove={handleSheetTouchMove}
+          onTouchEnd={handleSheetTouchEnd}
+          onTouchCancel={handleSheetTouchEnd}
+        >
           <div>
-            <h3 className="text-lg font-black uppercase tracking-tight">Bekleyen Randevular</h3>
+            <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-900">Bekleyen Randevular</h3>
             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">
               {sortedAppointments.length} adet onay bekliyor
             </p>

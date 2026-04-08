@@ -5,6 +5,7 @@ import { TURKEY_CITIES } from '../../lib/cities';
 import { useAuthStore } from '../../stores/authStore';
 import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
+import ThemeToggle from '../../components/ThemeToggle';
 
 // ─── Yardımcı Bileşenler ────────────────────────────────────────────────────
 
@@ -334,7 +335,7 @@ const ShopCard = ({ shop, onUpdated }) => {
 
 // ─── Ana Admin Dashboard ────────────────────────────────────────────────────
 
-const AdminDashboardPage = () => {
+const AdminDashboardPage = ({ isDark, onToggleTheme }) => {
   const [stats, setStats] = useState(null);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -378,17 +379,26 @@ const AdminDashboardPage = () => {
     <div className="bg-zinc-50 min-h-screen">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 pb-4">
-          <div>
+        <div className="relative flex justify-between items-center p-6 pb-4 gap-2">
+          <div className="pr-16 min-w-0">
             <h1 className="text-3xl font-black uppercase tracking-tighter">Admin</h1>
             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{user?.fullName}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 border-2 border-zinc-200 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
-          >
-            Çıkış
-          </button>
+
+          {onToggleTheme && (
+            <div className="absolute left-1/2 -translate-x-1/2 z-10">
+              <ThemeToggle isDark={!!isDark} onToggle={onToggleTheme} />
+            </div>
+          )}
+
+          <div className="pl-16 flex-shrink-0">
+            <button
+              onClick={handleLogout}
+              className="p-2 border-2 border-zinc-200 rounded-xl text-xs font-bold text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
+            >
+              Çıkış
+            </button>
+          </div>
         </div>
 
         {/* Stats */}

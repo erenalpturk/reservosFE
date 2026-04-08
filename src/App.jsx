@@ -9,7 +9,6 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import CancelPage from './pages/CancelPage';
 import InstallPrompt from './components/InstallPrompt';
-import ThemeToggle from './components/ThemeToggle';
 import { useAuthStore } from './stores/authStore';
 import useTheme from './hooks/useTheme';
 
@@ -37,7 +36,6 @@ function App() {
   return (
     <ToastProvider>
     <BrowserRouter>
-      <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
       <Routes>
         {/* Karşılama */}
         <Route path="/" element={<LandingPage />} />
@@ -56,7 +54,7 @@ function App() {
           path="/dashboard"
           element={
             <BarberRoute>
-              <DashboardPage />
+              <DashboardPage isDark={isDark} onToggleTheme={toggleTheme} />
             </BarberRoute>
           }
         />
@@ -66,7 +64,7 @@ function App() {
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboardPage />
+              <AdminDashboardPage isDark={isDark} onToggleTheme={toggleTheme} />
             </AdminRoute>
           }
         />
