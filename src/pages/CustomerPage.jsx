@@ -272,7 +272,6 @@ const CustomerPage = () => {
                 <input
                   type="tel"
                   placeholder="5XX XXX XX XX"
-                  inputMode="numeric"
                   maxLength={10}
                   value={contactInfo.phone.replace(/^\+?90/, '')}
                   onChange={(e) => {
@@ -310,6 +309,7 @@ const CustomerPage = () => {
             <p className="text-xs font-bold text-zinc-400 mb-4 px-1 uppercase tracking-widest">SMS ile gelen 6 haneli kodu girin</p>
             <Input
               placeholder="000000"
+              type="tel"
               maxLength={6}
               tracking
               center
