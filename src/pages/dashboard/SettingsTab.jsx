@@ -23,12 +23,12 @@ const Section = ({ title, children, defaultOpen = false }) => {
 
 // ─── Dükkan Bilgileri ───────────────────────────────────────────────
 const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
-  const [form, setForm] = useState({ name: shop?.name || '', phone: shop?.phone || '', address: shop?.address || '' });
+  const [form, setForm] = useState({ name: shop?.name || '', phone: shop?.phone || '', city: shop?.city || '', address: shop?.address || '' });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const bookingLink = shop?.slug
-    ? `${window.location.origin}/?shop=${encodeURIComponent(shop.slug)}`
+    ? `${window.location.origin}/book/${encodeURIComponent(shop.slug)}`
     : '';
 
   const handleSave = async () => {
@@ -97,7 +97,8 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
       {[
         { label: 'Dükkan Adı', key: 'name', placeholder: 'Maestro Berber' },
         { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
-        { label: 'Adres', key: 'address', placeholder: 'Kadıköy, İstanbul' },
+        { label: 'Şehir', key: 'city', placeholder: 'İstanbul' },
+        { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
       ].map(({ label, key, placeholder }) => (
         <div key={key}>
           <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>

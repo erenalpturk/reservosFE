@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import ShopSelectPage from './pages/ShopSelectPage';
 import CustomerPage from './pages/CustomerPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -29,8 +31,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Müşteri Sayfası */}
-        <Route path="/" element={<CustomerPage />} />
+        {/* Karşılama */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Dükkan Seçimi */}
+        <Route path="/book" element={<ShopSelectPage />} />
+
+        {/* Rezervasyon */}
+        <Route path="/book/:shopSlug" element={<CustomerPage />} />
 
         {/* Giriş */}
         <Route path="/login" element={<LoginPage />} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '../lib/api';
 import StepIndicator from '../components/StepIndicator';
 import Card from '../components/Card';
@@ -7,8 +7,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 
 const CustomerPage = () => {
-  const [searchParams] = useSearchParams();
-  const shopSlug = searchParams.get('shop');
+  const { shopSlug } = useParams();
 
   const [shop, setShop] = useState(null);
   const [step, setStep] = useState(1);
@@ -32,12 +31,7 @@ const CustomerPage = () => {
   const maxDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   useEffect(() => {
-    if (shopSlug) {
-      fetchShopData();
-    } else {
-      setError('Dükkan belirtilmedi.');
-      setLoading(false);
-    }
+    fetchShopData();
   }, [shopSlug]);
 
   const fetchShopData = async () => {

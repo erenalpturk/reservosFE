@@ -26,7 +26,7 @@ const Badge = ({ active }) => (
 
 const CreateShopModal = ({ onClose, onSuccess }) => {
   const [form, setForm] = useState({
-    name: '', slug: '', phone: '', address: '',
+    name: '', slug: '', phone: '', address: '', city: '',
     ownerFullName: '', ownerEmail: '', ownerPassword: '', ownerColorHex: '#7F77DD',
   });
   const [saving, setSaving] = useState(false);
@@ -67,7 +67,8 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
             { label: 'Dükkan Adı *', key: 'name', placeholder: 'Maestro Berber' },
             { label: 'Slug * (URL)', key: 'slug', placeholder: 'maestro-berber' },
             { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
-            { label: 'Adres', key: 'address', placeholder: 'Kadıköy, İstanbul' },
+            { label: 'Şehir', key: 'city', placeholder: 'İstanbul' },
+            { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
           ].map(({ label, key, placeholder }) => (
             <div key={key}>
               <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
@@ -199,6 +200,7 @@ const ShopCard = ({ shop, onUpdated }) => {
         </div>
 
         {shop.phone && <div className="text-xs text-zinc-500 font-bold mb-1">{shop.phone}</div>}
+        {shop.city && <div className="text-xs text-zinc-500 font-bold mb-0.5">{shop.city}</div>}
         {shop.address && <div className="text-xs text-zinc-400 mb-3">{shop.address}</div>}
 
         <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">
