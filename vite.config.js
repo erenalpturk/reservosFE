@@ -9,8 +9,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'BarberOS',
-        short_name: 'BarberOS',
+        name: 'BarberApp',
+        short_name: 'BarberApp',
         description: 'Berber randevu uygulaması',
         theme_color: '#18181b',
         background_color: '#18181b',
