@@ -261,14 +261,25 @@ const CustomerPage = () => {
               ← Geri
             </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">İletişim</h2>
-            <Input
-              label="Telefon"
-              placeholder="05XXXXXXXXX"
-              type="tel"
-              value={contactInfo.phone}
-              onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-              onBlur={handlePhoneBlur}
-            />
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Telefon</label>
+              <div className="flex border-2 border-zinc-100 rounded-2xl overflow-hidden focus-within:border-zinc-900 transition-all duration-200">
+                <span className="px-4 flex items-center text-sm font-bold text-zinc-400 bg-zinc-50 border-r-2 border-zinc-100 select-none">+90</span>
+                <input
+                  type="tel"
+                  placeholder="5XX XXX XX XX"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={contactInfo.phone.replace(/^\+?90/, '')}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    setContactInfo({ ...contactInfo, phone: digits });
+                  }}
+                  onBlur={handlePhoneBlur}
+                  className="flex-1 p-4 bg-white focus:outline-none text-sm font-bold"
+                />
+              </div>
+            </div>
             <Input
               label="Ad Soyad"
               placeholder="Ahmet Yılmaz"
