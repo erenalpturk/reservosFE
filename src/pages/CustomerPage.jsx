@@ -74,24 +74,17 @@ const CustomerPage = () => {
     }
   };
 
-  const handleSendOtp = async () => {
-    setSubmitting(true);
-    try {
-      const formattedPhone = contactInfo.phone.startsWith('+90')
-        ? contactInfo.phone
-        : `+90${contactInfo.phone.replace(/^0/, '')}`;
-      const response = await api.post('/otp/send', { phone: formattedPhone });
-      setSentOtp(response.data?.otp || '');
-      setStep(6);
-    } catch (err) {
-      setSentOtp('');
-      alert(err.response?.data?.error || 'Kod gönderilemedi.');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleSendOtp = () => {
+    const testOtp = String(Math.floor(100000 + Math.random() * 900000));
+    setSentOtp(testOtp);
+    setStep(6);
   };
 
   const handleCompleteBooking = async () => {
+    if (otpCode !== sentOtp) {
+      alert('Kod hatalı. Tekrar deneyin.');
+      return;
+    }
     setSubmitting(true);
     try {
       const formattedPhone = contactInfo.phone.startsWith('+90')
@@ -110,21 +103,7 @@ const CustomerPage = () => {
       await api.post('/appointments', payload);
       setStep(7);
     } catch (err) {
-      const data = err.response?.data;
-      if (data?.code === 'max_attempts_exceeded') {
-        alert('Çok fazla yanlış deneme. Lütfen baştan başlayın.');
-        // Sıfırla ve başa dön
-        setOtpCode('');
-        setStep(1);
-        setSelectedService(null);
-        setSelectedBarber(null);
-        setSelectedDate('');
-        setSelectedSlot(null);
-        setContactInfo({ fullName: '', phone: '' });
-        setSentOtp('');
-      } else {
-        alert(data?.error || 'Rezervasyon başarısız.');
-      }
+      alert(err.response?.data?.error || 'Rezervasyon başarısız.');
     } finally {
       setSubmitting(false);
     }
