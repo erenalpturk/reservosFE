@@ -26,7 +26,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
 
   if (loading) return (
     <div className="flex justify-center py-12">
-      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 border-t-transparent rounded-full" />
+      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 dark:border-zinc-300 border-t-transparent rounded-full" />
     </div>
   );
 
@@ -41,7 +41,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
           {hours.map(h => (
             <div
               key={h}
-              className="absolute text-[9px] font-bold text-zinc-300 leading-none text-right pr-1.5"
+              className="absolute text-[9px] font-bold text-zinc-300 dark:text-zinc-600 leading-none text-right pr-1.5"
               style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
             >
               {h}:00
@@ -55,7 +55,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
           {hours.map(h => (
             <div
               key={h}
-              className="absolute left-0 right-0 border-t border-zinc-100"
+              className="absolute left-0 right-0 border-t border-zinc-100 dark:border-zinc-800"
               style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
             />
           ))}
@@ -63,7 +63,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
           {hours.map(h => (
             <div
               key={`${h}h`}
-              className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
+              className="absolute left-0 right-0 border-t border-dashed border-zinc-50 dark:border-zinc-900"
               style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
             />
           ))}
@@ -82,7 +82,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
           {appointments.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 pointer-events-none">
               <div className="text-3xl">☕️</div>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Henüz randevu yok</p>
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Henüz randevu yok</p>
             </div>
           )}
 
@@ -110,25 +110,25 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
               >
                 <div className="flex items-center gap-1.5 px-2 py-1 flex-1 min-w-0">
                   <div className="flex-shrink-0">
-                    <div className="text-[10px] font-black text-zinc-700 whitespace-nowrap">{fmtTime(appt.starts_at)}</div>
+                    <div className="text-[10px] font-black text-zinc-700 dark:text-zinc-100 whitespace-nowrap">{fmtTime(appt.starts_at)}</div>
                     {height > 28 && (
-                      <div className="text-[9px] font-bold text-zinc-300 whitespace-nowrap">{fmtTime(appt.ends_at)}</div>
+                      <div className="text-[9px] font-bold text-zinc-300 dark:text-zinc-500 whitespace-nowrap">{fmtTime(appt.ends_at)}</div>
                     )}
                   </div>
 
                   {height > 20 && totalCols < 3 && (
                     <div className="flex-1 min-w-0">
-                      <div className="font-black text-xs uppercase tracking-tight truncate leading-tight text-zinc-800">
+                      <div className="font-black text-xs uppercase tracking-tight truncate leading-tight text-zinc-800 dark:text-zinc-100">
                         {appt.phone_customers?.full_name || 'Walk-In'}
                       </div>
                       {height > 34 && (
-                        <div className="text-[9px] font-bold text-zinc-400 truncate">{appt.services?.name}</div>
+                        <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 truncate">{appt.services?.name}</div>
                       )}
                     </div>
                   )}
 
                   <div className="flex-shrink-0 flex items-center">
-                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300'}`} />
+                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300 dark:bg-zinc-500'}`} />
                   </div>
                 </div>
               </button>

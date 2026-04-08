@@ -10,12 +10,33 @@
 }
 
 body {
-  @apply bg-zinc-50 text-zinc-900 antialiased;
+  @apply bg-zinc-50 text-zinc-900 antialiased transition-colors duration-300;
   touch-action: pan-x pan-y;
 }
 
+.dark body {
+  @apply bg-zinc-950 text-zinc-100;
+}
+
 input:focus {
-  @apply outline-none border-zinc-900;
+  @apply outline-none border-zinc-900 dark:border-zinc-300;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  @apply border-zinc-700 bg-zinc-900 text-zinc-100 placeholder-zinc-500;
+}
+
+.dark select option {
+  background: rgb(24 24 27);
+  color: rgb(244 244 245);
+}
+
+.dark input[type='date'],
+.dark input[type='time'],
+.dark input[type='datetime-local'] {
+  color-scheme: dark;
 }
 
 @keyframes fadeIn {

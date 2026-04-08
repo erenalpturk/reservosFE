@@ -23,14 +23,14 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
 
   if (loading) return (
     <div className="flex justify-center py-12">
-      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 border-t-transparent rounded-full" />
+      <div className="animate-spin h-6 w-6 border-4 border-zinc-900 dark:border-zinc-300 border-t-transparent rounded-full" />
     </div>
   );
 
   return (
     <div className="h-full overflow-y-auto">
       {/* Gün başlıkları */}
-      <div className="sticky top-0 z-20 bg-zinc-50 pb-1.5 flex" style={{ paddingLeft: '30px' }}>
+      <div className="sticky top-0 z-20 bg-zinc-50 dark:bg-zinc-950 pb-1.5 flex" style={{ paddingLeft: '30px' }}>
         {weekDays.map((day, i) => {
           const isToday = day === today;
           const hasPending = (byDay[day] || []).some(a => a.status === 'pending');
@@ -39,7 +39,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
               key={day}
               onClick={() => onDayClick(day)}
               className={`flex-1 rounded-lg py-1 mx-px text-center transition-all ${
-                isToday ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+                isToday ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
               }`}
             >
               <div className="text-[8px] font-black uppercase tracking-widest">{DAY_NAMES[i]}</div>
@@ -59,7 +59,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
             {hours.map(h => (
               <div
                 key={h}
-                className="absolute text-[8px] font-bold text-zinc-300 leading-none text-right pr-1"
+                className="absolute text-[8px] font-bold text-zinc-300 dark:text-zinc-600 leading-none text-right pr-1"
                 style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
               >
                 {h}
@@ -73,7 +73,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
             {hours.map(h => (
               <div
                 key={h}
-                className="absolute left-0 right-0 border-t border-zinc-100"
+                className="absolute left-0 right-0 border-t border-zinc-100 dark:border-zinc-800"
                 style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
               />
             ))}
@@ -81,7 +81,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
             {hours.map(h => (
               <div
                 key={`${h}h`}
-                className="absolute left-0 right-0 border-t border-dashed border-zinc-50"
+                className="absolute left-0 right-0 border-t border-dashed border-zinc-50 dark:border-zinc-900"
                 style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
               />
             ))}
@@ -128,7 +128,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
                             {fmtTime(appt.starts_at)}
                           </div>
                           {height > 22 && totalCols < 3 && (
-                            <div className="text-[7px] font-bold text-zinc-500 truncate leading-tight">
+                            <div className="text-[7px] font-bold text-zinc-500 dark:text-zinc-400 truncate leading-tight">
                               {(appt.phone_customers?.full_name || 'Walk').split(' ')[0]}
                             </div>
                           )}

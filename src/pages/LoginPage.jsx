@@ -30,9 +30,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-dvh overflow-hidden bg-zinc-50 flex items-center justify-center p-6 animate-fadeIn">
-      <div className="bg-white p-12 rounded-[3rem] shadow-2xl w-full max-w-md border border-zinc-100">
-        <h1 className="text-4xl font-black mb-10 text-center text-zinc-900 uppercase tracking-tighter italic">BarberApp</h1>
+    <div className="h-dvh overflow-hidden bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-6 animate-fadeIn transition-colors">
+      <div className="bg-white dark:bg-zinc-900 p-12 rounded-[3rem] shadow-2xl w-full max-w-md border border-zinc-100 dark:border-zinc-800">
+        <h1 className="text-4xl font-black mb-10 text-center text-zinc-900 dark:text-zinc-100 uppercase tracking-tighter italic">BarberApp</h1>
         <form onSubmit={handleLogin} className="space-y-2">
           <Input 
             label="E-posta"

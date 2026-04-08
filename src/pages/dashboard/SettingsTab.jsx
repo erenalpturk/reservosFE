@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../../lib/api';
+import { TURKEY_CITIES } from '../../lib/cities';
 import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
 
@@ -9,15 +10,15 @@ const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 
 const Section = ({ title, children, defaultOpen = false }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white rounded-3xl border border-zinc-100 overflow-hidden mb-4">
+    <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 overflow-hidden mb-4">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex justify-between items-center p-5 text-left"
       >
-        <span className="font-black text-sm uppercase tracking-tight">{title}</span>
-        <span className="text-zinc-400 font-bold text-lg leading-none">{open ? '−' : '+'}</span>
+        <span className="font-black text-sm uppercase tracking-tight text-zinc-900 dark:text-zinc-100">{title}</span>
+        <span className="text-zinc-400 dark:text-zinc-500 font-bold text-lg leading-none">{open ? '−' : '+'}</span>
       </button>
-      {open && <div className="px-5 pb-5 border-t border-zinc-50">{children}</div>}
+      {open && <div className="px-5 pb-5 border-t border-zinc-50 dark:border-zinc-800">{children}</div>}
     </div>
   );
 };
@@ -84,12 +85,12 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
             readOnly
             value={bookingLink}
             placeholder="Link oluşturulamadı"
-            className="flex-1 p-3 border-2 border-zinc-100 rounded-2xl text-xs font-bold text-zinc-600 bg-zinc-50 focus:outline-none"
+            className="flex-1 p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-xs font-bold text-zinc-600 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-950 focus:outline-none"
           />
           <button
             type="button"
             onClick={handleCopyBookingLink}
-            className="px-3 py-3 border-2 border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-all"
+            className="px-3 py-3 border-2 border-zinc-200 dark:border-zinc-700 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-all"
           >
             {copied ? 'Kopyalandı' : 'Kopyala'}
           </button>
@@ -99,23 +100,36 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
       {[
         { label: 'Dükkan Adı', key: 'name', placeholder: 'Maestro Berber' },
         { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
-        { label: 'Şehir', key: 'city', placeholder: 'İstanbul' },
         { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
       ].map(({ label, key, placeholder }) => (
         <div key={key}>
-          <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+          <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">{label}</label>
           <input
             type="text"
             placeholder={placeholder}
             value={form[key]}
             onChange={e => setForm({ ...form, [key]: e.target.value })}
             disabled={!canEdit}
-            className={`w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:border-zinc-900 focus:outline-none ${!canEdit ? 'bg-zinc-50 text-zinc-500 cursor-not-allowed' : ''}`}
+            className={`w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none ${!canEdit ? 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-500 cursor-not-allowed' : ''}`}
           />
         </div>
       ))}
+      <div>
+        <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Şehir</label>
+        <select
+          value={form.city}
+          onChange={e => setForm({ ...form, city: e.target.value })}
+          disabled={!canEdit}
+          className={`w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none ${!canEdit ? 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-500 cursor-not-allowed' : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100'}`}
+        >
+          <option value="">Şehir seçin</option>
+          {TURKEY_CITIES.map(city => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </select>
+      </div>
       {!canEdit && (
-        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+        <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-1">
           Bu alan sadece dükkan sahibi tarafından düzenlenebilir.
         </p>
       )}
@@ -127,32 +141,11 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
 // ─── Berberler ──────────────────────────────────────────────────────
 const BarbersSection = ({ shop, onUpdated }) => {
   const toast = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', colorHex: '#7F77DD' });
-  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
 
   const activeBarbers = shop?.barbers?.filter(b => b.is_active !== false) || [];
-
-  const handleInvite = async () => {
-    if (!form.email || !form.password || !form.fullName) {
-      toast('E-posta, şifre ve ad zorunludur.');
-      return;
-    }
-    setSaving(true);
-    try {
-      await api.post('/shops/barbers', form);
-      setForm({ email: '', password: '', fullName: '', colorHex: '#7F77DD' });
-      setShowForm(false);
-      onUpdated();
-    } catch (err) {
-      toast(err.response?.data?.error || 'Berber eklenemedi.');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDeactivate = async (id, name) => {
     if (!window.confirm(`${name} adlı berberi kaldırmak istediğinize emin misiniz?`)) return;
@@ -192,20 +185,20 @@ const BarbersSection = ({ shop, onUpdated }) => {
       {activeBarbers.map(b => (
         <div key={b.id}>
           {editingId === b.id ? (
-            <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200">
-              <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Düzenle</p>
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl space-y-3 border-2 border-zinc-200 dark:border-zinc-700">
+              <p className="text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Düzenle</p>
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
+                <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
                 <input
                   type="text"
                   placeholder="Ahmet Usta"
                   value={editForm.fullName}
                   onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
-                  className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                  className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Renk</label>
+                <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Renk</label>
                 <input
                   type="color"
                   value={editForm.colorHex}
@@ -229,62 +222,24 @@ const BarbersSection = ({ shop, onUpdated }) => {
           ) : (
             <button
               onClick={() => startEdit(b)}
-              className="w-full flex items-center justify-between p-3 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-colors text-left"
+              className="w-full flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-950 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: b.color_hex }} />
                 <div>
-                  <div className="text-sm font-bold">{b.full_name}</div>
-                  {b.is_owner && <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Sahip</div>}
+                  <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{b.full_name}</div>
+                  {b.is_owner && <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Sahip</div>}
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Düzenle ›</span>
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Düzenle ›</span>
             </button>
           )}
         </div>
       ))}
 
-      {!showForm ? (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full p-3 border-2 border-dashed border-zinc-200 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 transition-all"
-        >
-          + Berber Ekle
-        </button>
-      ) : (
-        <div className="p-4 bg-zinc-50 rounded-2xl space-y-3">
-          <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Yeni Berber</p>
-          {[
-            { label: 'Ad Soyad', key: 'fullName', placeholder: 'Ahmet Usta', type: 'text' },
-            { label: 'E-posta', key: 'email', placeholder: 'ahmet@mail.com', type: 'email' },
-            { label: 'Şifre', key: 'password', placeholder: '••••••••', type: 'password' },
-          ].map(({ label, key, placeholder, type }) => (
-            <div key={key}>
-              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
-              <input
-                type={type}
-                placeholder={placeholder}
-                value={form[key]}
-                onChange={e => setForm({ ...form, [key]: e.target.value })}
-                className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
-              />
-            </div>
-          ))}
-          <div>
-            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Renk</label>
-            <input
-              type="color"
-              value={form.colorHex}
-              onChange={e => setForm({ ...form, colorHex: e.target.value })}
-              className="h-10 w-full rounded-2xl border-2 border-zinc-100 cursor-pointer"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleInvite} loading={saving}>Ekle</Button>
-            <Button variant="secondary" onClick={() => setShowForm(false)}>İptal</Button>
-          </div>
-        </div>
-      )}
+      <div className="p-3 border border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 text-xs font-bold text-zinc-500 dark:text-zinc-400">
+        Yeni berber ekleme işlemi sadece admin panelinden yapılabilir.
+      </div>
     </div>
   );
 };
@@ -364,18 +319,18 @@ const ServicesSection = ({ shop, onUpdated }) => {
       {activeServices.map(s => (
         <div key={s.id}>
           {editingId === s.id ? (
-            <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200">
-              <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Düzenle</p>
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl space-y-3 border-2 border-zinc-200 dark:border-zinc-700">
+              <p className="text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Düzenle</p>
               {ServiceFields.map(({ label, key, placeholder, type }) => (
                 <div key={key}>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">{label}</label>
                   <input
                     type={type}
                     placeholder={placeholder}
                     value={editForm[key]}
                     onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
                     min={type === 'number' ? '1' : undefined}
-                    className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                    className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
                   />
                 </div>
               ))}
@@ -393,15 +348,15 @@ const ServicesSection = ({ shop, onUpdated }) => {
           ) : (
             <button
               onClick={() => startEdit(s)}
-              className="w-full flex items-center justify-between p-3 bg-zinc-50 rounded-2xl hover:bg-zinc-100 transition-colors text-left"
+              className="w-full flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-950 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-left"
             >
               <div>
-                <div className="text-sm font-bold">{s.name}</div>
-                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{s.name}</div>
+                <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                   {s.duration_min} dk + {s.buffer_min} dk buffer
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Düzenle ›</span>
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Düzenle ›</span>
             </button>
           )}
         </div>
@@ -410,23 +365,23 @@ const ServicesSection = ({ shop, onUpdated }) => {
       {!showForm ? (
         <button
           onClick={() => setShowForm(true)}
-          className="w-full p-3 border-2 border-dashed border-zinc-200 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 transition-all"
+          className="w-full p-3 border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-all"
         >
           + Hizmet Ekle
         </button>
       ) : (
-        <div className="p-4 bg-zinc-50 rounded-2xl space-y-3">
-          <p className="text-xs font-black uppercase tracking-widest text-zinc-500">Yeni Hizmet</p>
+        <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl space-y-3 border border-zinc-200 dark:border-zinc-700">
+          <p className="text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Yeni Hizmet</p>
           {ServiceFields.map(({ label, key, placeholder, type }) => (
             <div key={key}>
-              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+              <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">{label}</label>
               <input
                 type={type}
                 placeholder={placeholder}
                 value={form[key]}
                 onChange={e => setForm({ ...form, [key]: e.target.value })}
                 min={type === 'number' ? '1' : undefined}
-                className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+                className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
               />
             </div>
           ))}
@@ -480,8 +435,8 @@ const HoursSection = ({ shop, onUpdated }) => {
   return (
     <div className="pt-4 space-y-2">
       {hours.map((h, i) => (
-        <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl ${h.is_closed ? 'bg-zinc-50 opacity-60' : 'bg-zinc-50'}`}>
-          <div className="w-20 text-xs font-black uppercase tracking-widest text-zinc-600 flex-shrink-0">{DAYS[i]}</div>
+        <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl ${h.is_closed ? 'bg-zinc-50 dark:bg-zinc-950 opacity-60' : 'bg-zinc-50 dark:bg-zinc-950'}`}>
+          <div className="w-20 text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300 flex-shrink-0">{DAYS[i]}</div>
           <input
             type="checkbox"
             checked={h.is_closed}
@@ -490,21 +445,21 @@ const HoursSection = ({ shop, onUpdated }) => {
             title="Kapalı"
           />
           {h.is_closed ? (
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Kapalı</span>
+            <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Kapalı</span>
           ) : (
             <div className="flex items-center gap-2 flex-1">
               <input
                 type="time"
                 value={h.open_time}
                 onChange={e => updateHour(i, 'open_time', e.target.value)}
-                className="flex-1 p-2 border-2 border-zinc-100 rounded-xl text-xs font-bold focus:border-zinc-900 focus:outline-none bg-white"
+                className="flex-1 p-2 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-xs font-bold focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
               />
-              <span className="text-xs text-zinc-400 font-bold">—</span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500 font-bold">—</span>
               <input
                 type="time"
                 value={h.close_time}
                 onChange={e => updateHour(i, 'close_time', e.target.value)}
-                className="flex-1 p-2 border-2 border-zinc-100 rounded-xl text-xs font-bold focus:border-zinc-900 focus:outline-none bg-white"
+                className="flex-1 p-2 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-xs font-bold focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
               />
             </div>
           )}
@@ -550,13 +505,13 @@ const BlockSection = ({ shop, user, onUpdated }) => {
     <div className="pt-4 space-y-3">
       {user.isOwner && (
         <div>
-          <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">
-            Berber <span className="normal-case font-normal text-zinc-300">(boş = tüm dükkan)</span>
+          <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
+            Berber <span className="normal-case font-normal text-zinc-300 dark:text-zinc-600">(boş = tüm dükkan)</span>
           </label>
           <select
             value={form.barberId}
             onChange={e => setForm({ ...form, barberId: e.target.value })}
-            className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+            className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
           >
             <option value="">Tüm dükkan</option>
             {activeBarbers.map(b => (
@@ -570,25 +525,25 @@ const BlockSection = ({ shop, user, onUpdated }) => {
         { label: 'Bitiş', key: 'endsAt' },
       ].map(({ label, key }) => (
         <div key={key}>
-          <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">{label}</label>
+          <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">{label}</label>
           <input
             type="datetime-local"
             value={form[key]}
             onChange={e => setForm({ ...form, [key]: e.target.value })}
-            className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:border-zinc-900 focus:outline-none"
+            className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
           />
         </div>
       ))}
       <div>
-        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">
-          Açıklama <span className="normal-case font-normal text-zinc-300">(opsiyonel)</span>
+        <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
+          Açıklama <span className="normal-case font-normal text-zinc-300 dark:text-zinc-600">(opsiyonel)</span>
         </label>
         <input
           type="text"
           placeholder="İzin, toplantı, öğle arası..."
           value={form.reason}
           onChange={e => setForm({ ...form, reason: e.target.value })}
-          className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold focus:border-zinc-900 focus:outline-none"
+          className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
         />
       </div>
       <Button onClick={handleAdd} loading={saving}>Blok Ekle</Button>
@@ -603,7 +558,7 @@ const SettingsTab = ({ shop, user, onShopUpdated }) => {
   if (!shop) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin h-8 w-8 border-4 border-zinc-900 border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-4 border-zinc-900 dark:border-zinc-300 border-t-transparent rounded-full"></div>
       </div>
     );
   }

@@ -3,10 +3,10 @@ import React from 'react';
 const Button = ({ children, onClick, variant = 'primary', disabled, loading, type = 'button' }) => {
   const base = "w-full p-4 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all duration-200 active:scale-95";
   const variants = {
-    primary: "bg-zinc-900 text-white hover:bg-black",
-    secondary: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100",
-    outline: "border-2 border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white"
+    primary: "bg-zinc-900 text-white hover:bg-black dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white",
+    secondary: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700",
+    danger: "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60",
+    outline: "border-2 border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white dark:border-zinc-300 dark:text-zinc-100 dark:hover:bg-zinc-100 dark:hover:text-zinc-900"
   };
 
   return (

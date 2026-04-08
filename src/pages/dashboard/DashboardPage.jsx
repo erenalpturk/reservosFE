@@ -103,7 +103,7 @@ const DashboardPage = () => {
 
   const pendingCount = allPendingAppointments.length;
   const programSummary = [
-    { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700' },
+    { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
     { label: 'Bekleyen', count: pendingCount, cls: 'text-orange-500' },
     { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
     { label: 'Tamam', count: appointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
@@ -142,11 +142,11 @@ const DashboardPage = () => {
   }, [highlightApptId, highlightTick]);
 
   return (
-    <div className="bg-zinc-50 h-dvh w-full overflow-hidden">
+    <div className="bg-zinc-50 dark:bg-zinc-950 h-dvh w-full overflow-hidden text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
-        <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 backdrop-blur border-b border-zinc-100">
+        <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
           {/* ── Header ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3">
             <div className="flex items-center gap-2">
@@ -160,13 +160,13 @@ const DashboardPage = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest hidden sm:block">
                 {user?.fullName}
               </span>
               <button
                 type="button"
                 onClick={() => setShowPendingModal(true)}
-                className="relative h-8 w-8 border-2 border-zinc-200 rounded-xl text-sm text-zinc-500 hover:border-orange-300 hover:text-orange-500 transition-all"
+                className="relative h-8 w-8 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all"
                 aria-label="Bekleyen randevu bildirimlerini aç"
               >
                 🔔
@@ -178,7 +178,7 @@ const DashboardPage = () => {
               </button>
               <button
                 onClick={() => { logout(); navigate('/login'); }}
-                className="px-3 py-1.5 border-2 border-zinc-200 rounded-xl text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 transition-all"
+                className="px-3 py-1.5 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-300 dark:hover:text-zinc-100 transition-all"
               >
                 Çıkış
               </button>
@@ -192,7 +192,7 @@ const DashboardPage = () => {
                 key={val}
                 onClick={() => setTab(val)}
                 className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  tab === val ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+                  tab === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
                 }`}
               >
                 {label}
@@ -205,13 +205,13 @@ const DashboardPage = () => {
             <div className="px-5 pb-3">
               <div className="flex items-center gap-1.5">
                 {/* Gün/Hafta toggle */}
-                <div className="flex bg-white border-2 border-zinc-100 rounded-xl overflow-hidden flex-shrink-0">
+                <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl overflow-hidden flex-shrink-0">
                   {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
                     <button
                       key={val}
                       onClick={() => setViewMode(val)}
                       className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
-                        viewMode === val ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:text-zinc-700'
+                        viewMode === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200'
                       }`}
                     >
                       {label}
@@ -223,31 +223,31 @@ const DashboardPage = () => {
                 <div className="flex flex-1 min-w-0 items-center gap-1">
                   <button
                     onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
-                    className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
+                    className="px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-500 font-black text-sm transition-all"
                   >‹</button>
                   {viewMode === 'day' ? (
                     <input
                       type="date"
                       value={date}
                       onChange={e => setDate(e.target.value)}
-                      className="flex-1 min-w-0 w-0 py-2 px-2 border-2 border-zinc-100 rounded-xl text-[10px] font-bold focus:border-zinc-900 focus:outline-none bg-white text-center uppercase"
+                      className="flex-1 min-w-0 w-0 py-2 px-2 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-[10px] font-bold focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none bg-white dark:bg-zinc-900 text-center uppercase"
                     />
                   ) : (
-                    <div className="flex-1 min-w-0 py-2 px-2 bg-white border-2 border-zinc-100 rounded-xl text-[10px] font-black text-zinc-600 text-center uppercase tracking-widest truncate">
+                    <div className="flex-1 min-w-0 py-2 px-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-[10px] font-black text-zinc-600 dark:text-zinc-300 text-center uppercase tracking-widest truncate">
                       {toLocalDate(weekDays[0]).getDate()}–{toLocalDate(weekDays[6]).getDate()}{' '}
                       {toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}
                     </div>
                   )}
                   <button
                     onClick={() => viewMode === 'day' ? shiftDay(1) : shiftWeek(1)}
-                    className="px-2.5 py-2 bg-white border-2 border-zinc-100 rounded-xl text-zinc-500 hover:border-zinc-300 font-black text-sm transition-all"
+                    className="px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-500 font-black text-sm transition-all"
                   >›</button>
                 </div>
 
                 {/* Walk-in */}
                 <button
                   onClick={() => setShowWalkIn(true)}
-                  className="px-3 py-2 bg-zinc-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 flex-shrink-0"
+                  className="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
                 >
                   +
                 </button>
@@ -272,20 +272,20 @@ const DashboardPage = () => {
 
         {/* Alt özet */}
         {tab === 'program' && (
-          <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 bg-white/95 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+          <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/90 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
             <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
                 {summaryTitle}
               </span>
             </div>
             <div className="flex gap-2">
               {programSummary.map(({ label, count, cls }) => (
-                <div key={label} className="flex-1 bg-white rounded-xl p-2 border border-zinc-100 text-center">
+                <div key={label} className="flex-1 bg-white dark:bg-zinc-900 rounded-xl p-2 border border-zinc-100 dark:border-zinc-700 text-center">
                   <div className={`text-base font-black ${cls}`}>{count}</div>
-                  <div className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{label}</div>
+                  <div className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{label}</div>
                 </div>
               ))}
             </div>

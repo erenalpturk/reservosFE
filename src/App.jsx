@@ -9,7 +9,9 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import CancelPage from './pages/CancelPage';
 import InstallPrompt from './components/InstallPrompt';
+import ThemeToggle from './components/ThemeToggle';
 import { useAuthStore } from './stores/authStore';
+import useTheme from './hooks/useTheme';
 
 // Sadece giriş yapmış berberler (owner veya employee)
 const BarberRoute = ({ children }) => {
@@ -30,9 +32,12 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
+  const { isDark, toggleTheme } = useTheme();
+
   return (
     <ToastProvider>
     <BrowserRouter>
+      <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
       <Routes>
         {/* Karşılama */}
         <Route path="/" element={<LandingPage />} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
+import { TURKEY_CITIES } from '../../lib/cities';
 import { useAuthStore } from '../../stores/authStore';
 import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
@@ -69,7 +70,6 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
             { label: 'Dükkan Adı *', key: 'name', placeholder: 'Maestro Berber' },
             { label: 'Slug * (URL)', key: 'slug', placeholder: 'maestro-berber' },
             { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
-            { label: 'Şehir', key: 'city', placeholder: 'İstanbul' },
             { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
           ].map(({ label, key, placeholder }) => (
             <div key={key}>
@@ -87,6 +87,20 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
               />
             </div>
           ))}
+
+          <div>
+            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Şehir</label>
+            <select
+              value={form.city}
+              onChange={e => handleField('city', e.target.value)}
+              className="w-full p-3 border-2 border-zinc-100 rounded-2xl text-sm font-bold bg-white focus:border-zinc-900 focus:outline-none"
+            >
+              <option value="">Şehir seçin</option>
+              {TURKEY_CITIES.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
 
           <div className="border-t border-zinc-100 pt-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Dükkan Sahibi Berberi</p>
