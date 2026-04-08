@@ -123,7 +123,7 @@ const CustomerPage = () => {
   const currentBarberSlots = availability.find(a => a.barber.id === selectedBarber?.id)?.slots || [];
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl pb-10 flex flex-col animate-fadeIn">
+    <div className="max-w-md mx-auto bg-white h-screen overflow-hidden shadow-2xl flex flex-col animate-fadeIn">
       <div className="bg-zinc-900 text-white p-8">
         <h1 className="text-2xl font-black uppercase tracking-tighter italic">{shop.name}</h1>
         <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">{shop.address}</p>
