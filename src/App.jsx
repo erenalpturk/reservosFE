@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import CancelPage from './pages/CancelPage';
+import InstallPrompt from './components/InstallPrompt';
 import { useAuthStore } from './stores/authStore';
 
 // Sadece giriş yapmış berberler (owner veya employee)
@@ -72,6 +73,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    <InstallPrompt />
     </ToastProvider>
   );
 }

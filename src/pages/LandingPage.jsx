@@ -5,7 +5,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-md mx-auto bg-white h-screen overflow-hidden shadow-2xl flex flex-col">
+    <div className="max-w-md mx-auto bg-white h-dvh overflow-hidden shadow-2xl flex flex-col">
       <div className="bg-zinc-900 text-white p-10 flex-1 flex flex-col justify-center items-center text-center">
         <h1 className="text-5xl font-black uppercase tracking-tighter italic mb-3">BarberApp</h1>
         <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Randevunuzu kolayca alın</p>
