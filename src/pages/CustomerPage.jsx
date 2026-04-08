@@ -289,11 +289,9 @@ const CustomerPage = () => {
         {step === 6 && (
           <div className="animate-fadeIn">
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Doğrulama</h2>
-            {sentOtp && (
-              <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-900 uppercase tracking-widest">
-                Test OTP: {sentOtp}
-              </div>
-            )}
+            <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-900 uppercase tracking-widest">
+              Test OTP: {sentOtp}
+            </div>
             <p className="text-xs font-bold text-zinc-400 mb-4 px-1 uppercase tracking-widest">SMS ile gelen 6 haneli kodu girin</p>
             <Input
               placeholder="000000"
