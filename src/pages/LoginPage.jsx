@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { useToast } from '../components/Toast';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
+  const toast = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ const LoginPage = () => {
       setAuth(user, token);
       navigate(user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
-      alert(err.response?.data?.error || 'Bir hata oluştu.');
+      toast(err.response?.data?.error || 'Bir hata oluştu.');
     } finally {
       setLoading(false);
     }

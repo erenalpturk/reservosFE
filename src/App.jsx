@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastProvider } from './components/Toast';
 import LandingPage from './pages/LandingPage';
 import ShopSelectPage from './pages/ShopSelectPage';
 import CustomerPage from './pages/CustomerPage';
@@ -29,6 +30,7 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
+    <ToastProvider>
     <BrowserRouter>
       <Routes>
         {/* Karşılama */}
@@ -70,6 +72,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ToastProvider>
   );
 }
 

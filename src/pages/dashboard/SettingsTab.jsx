@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../lib/api';
 import Button from '../../components/Button';
+import { useToast } from '../../components/Toast';
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 
@@ -23,6 +24,7 @@ const Section = ({ title, children, defaultOpen = false }) => {
 
 // ─── Dükkan Bilgileri ───────────────────────────────────────────────
 const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
+  const toast = useToast();
   const [form, setForm] = useState({ name: shop?.name || '', phone: shop?.phone || '', city: shop?.city || '', address: shop?.address || '' });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -38,7 +40,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
       await api.patch('/shops', form);
       onUpdated();
     } catch {
-      alert('Güncelleme başarısız.');
+      toast('Güncelleme başarısız.');
     } finally {
       setSaving(false);
     }
@@ -46,7 +48,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
 
   const handleCopyBookingLink = async () => {
     if (!bookingLink) {
-      alert('Önce dükkan slug bilgisi gerekli.');
+      toast('Önce dükkan slug bilgisi gerekli.');
       return;
     }
     try {
@@ -66,7 +68,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      alert('Link kopyalanamadı.');
+      toast('Link kopyalanamadı.');
     }
   };
 
@@ -124,6 +126,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
 
 // ─── Berberler ──────────────────────────────────────────────────────
 const BarbersSection = ({ shop, onUpdated }) => {
+  const toast = useToast();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', fullName: '', colorHex: '#7F77DD' });
   const [saving, setSaving] = useState(false);
@@ -135,7 +138,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
 
   const handleInvite = async () => {
     if (!form.email || !form.password || !form.fullName) {
-      alert('E-posta, şifre ve ad zorunludur.');
+      toast('E-posta, şifre ve ad zorunludur.');
       return;
     }
     setSaving(true);
@@ -145,7 +148,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
       setShowForm(false);
       onUpdated();
     } catch (err) {
-      alert(err.response?.data?.error || 'Berber eklenemedi.');
+      toast(err.response?.data?.error || 'Berber eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -158,7 +161,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
       setEditingId(null);
       onUpdated();
     } catch {
-      alert('İşlem başarısız.');
+      toast('İşlem başarısız.');
     }
   };
 
@@ -168,7 +171,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
   };
 
   const handleUpdate = async () => {
-    if (!editForm.fullName) { alert('Ad zorunludur.'); return; }
+    if (!editForm.fullName) { toast('Ad zorunludur.'); return; }
     setEditSaving(true);
     try {
       await api.patch(`/shops/barbers/${editingId}`, {
@@ -178,7 +181,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
       setEditingId(null);
       onUpdated();
     } catch (err) {
-      alert(err.response?.data?.error || 'Güncellenemedi.');
+      toast(err.response?.data?.error || 'Güncellenemedi.');
     } finally {
       setEditSaving(false);
     }
@@ -294,6 +297,7 @@ const ServiceFields = [
 ];
 
 const ServicesSection = ({ shop, onUpdated }) => {
+  const toast = useToast();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', durationMin: '', bufferMin: '5' });
   const [saving, setSaving] = useState(false);
@@ -304,7 +308,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
   const activeServices = shop?.services?.filter(s => s.is_active !== false) || [];
 
   const handleAdd = async () => {
-    if (!form.name || !form.durationMin) { alert('Ad ve süre zorunludur.'); return; }
+    if (!form.name || !form.durationMin) { toast('Ad ve süre zorunludur.'); return; }
     setSaving(true);
     try {
       await api.post('/shops/services', {
@@ -316,7 +320,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
       setShowForm(false);
       onUpdated();
     } catch (err) {
-      alert(err.response?.data?.error || 'Hizmet eklenemedi.');
+      toast(err.response?.data?.error || 'Hizmet eklenemedi.');
     } finally {
       setSaving(false);
     }
@@ -328,7 +332,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
   };
 
   const handleUpdate = async () => {
-    if (!editForm.name || !editForm.durationMin) { alert('Ad ve süre zorunludur.'); return; }
+    if (!editForm.name || !editForm.durationMin) { toast('Ad ve süre zorunludur.'); return; }
     setEditSaving(true);
     try {
       await api.patch(`/shops/services/${editingId}`, {
@@ -339,7 +343,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
       setEditingId(null);
       onUpdated();
     } catch (err) {
-      alert(err.response?.data?.error || 'Güncellenemedi.');
+      toast(err.response?.data?.error || 'Güncellenemedi.');
     } finally {
       setEditSaving(false);
     }
@@ -351,7 +355,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
       await api.delete(`/shops/services/${id}`);
       onUpdated();
     } catch {
-      alert('İşlem başarısız.');
+      toast('İşlem başarısız.');
     }
   };
 
@@ -438,6 +442,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
 
 // ─── Çalışma Saatleri ───────────────────────────────────────────────
 const HoursSection = ({ shop, onUpdated }) => {
+  const toast = useToast();
   const defaultHours = Array.from({ length: 7 }, (_, i) => ({
     day_of_week: i,
     open_time: '09:00',
@@ -466,7 +471,7 @@ const HoursSection = ({ shop, onUpdated }) => {
       await api.patch('/shops/hours', { hours });
       onUpdated();
     } catch {
-      alert('Güncelleme başarısız.');
+      toast('Güncelleme başarısız.');
     } finally {
       setSaving(false);
     }
@@ -514,6 +519,7 @@ const HoursSection = ({ shop, onUpdated }) => {
 
 // ─── İzin / Blok ────────────────────────────────────────────────────
 const BlockSection = ({ shop, user, onUpdated }) => {
+  const toast = useToast();
   const [form, setForm] = useState({ startsAt: '', endsAt: '', reason: '', barberId: '' });
   const [saving, setSaving] = useState(false);
 
@@ -521,7 +527,7 @@ const BlockSection = ({ shop, user, onUpdated }) => {
 
   const handleAdd = async () => {
     if (!form.startsAt || !form.endsAt) {
-      alert('Başlangıç ve bitiş zorunludur.');
+      toast('Başlangıç ve bitiş zorunludur.');
       return;
     }
     setSaving(true);
@@ -534,7 +540,7 @@ const BlockSection = ({ shop, user, onUpdated }) => {
       });
       setForm({ startsAt: '', endsAt: '', reason: '', barberId: '' });
     } catch (err) {
-      alert(err.response?.data?.error || 'Blok eklenemedi.');
+      toast(err.response?.data?.error || 'Blok eklenemedi.');
     } finally {
       setSaving(false);
     }

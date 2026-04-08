@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuthStore } from '../../stores/authStore';
 import Button from '../../components/Button';
+import { useToast } from '../../components/Toast';
 
 // ─── Yardımcı Bileşenler ────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ const Badge = ({ active }) => (
 // ─── Dükkan Oluşturma Modal ─────────────────────────────────────────────────
 
 const CreateShopModal = ({ onClose, onSuccess }) => {
+  const toast = useToast();
   const [form, setForm] = useState({
     name: '', slug: '', phone: '', address: '', city: '',
     ownerFullName: '', ownerEmail: '', ownerPassword: '', ownerColorHex: '#7F77DD',
@@ -37,7 +39,7 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
 
   const handleSubmit = async () => {
     if (!form.name || !form.slug || !form.ownerEmail || !form.ownerPassword || !form.ownerFullName) {
-      alert('Zorunlu alanları doldurun.');
+      toast('Zorunlu alanları doldurun.');
       return;
     }
     setSaving(true);
@@ -46,7 +48,7 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
       onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.error || 'Dükkan oluşturulamadı.');
+      toast(err.response?.data?.error || 'Dükkan oluşturulamadı.');
     } finally {
       setSaving(false);
     }
@@ -127,6 +129,7 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
 const emptyBarberForm = { fullName: '', email: '', password: '', colorHex: '#7F77DD' };
 
 const ShopCard = ({ shop, onUpdated }) => {
+  const toast = useToast();
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showAddBarber, setShowAddBarber] = useState(false);
@@ -140,7 +143,7 @@ const ShopCard = ({ shop, onUpdated }) => {
       await api.patch(`/admin/shops/${shop.id}`, { is_active: !shop.is_active });
       onUpdated();
     } catch {
-      alert('İşlem başarısız.');
+      toast('İşlem başarısız.');
     } finally {
       setLoading(false);
     }
@@ -151,7 +154,7 @@ const ShopCard = ({ shop, onUpdated }) => {
       await api.patch(`/admin/barbers/${barberId}`, { is_active: !currentActive });
       onUpdated();
     } catch {
-      alert('İşlem başarısız.');
+      toast('İşlem başarısız.');
     }
   };
 
@@ -162,13 +165,13 @@ const ShopCard = ({ shop, onUpdated }) => {
       await api.patch(`/admin/barbers/${barberId}`, { is_owner: true });
       onUpdated();
     } catch {
-      alert('İşlem başarısız.');
+      toast('İşlem başarısız.');
     }
   };
 
   const handleAddBarber = async () => {
     if (!barberForm.email || !barberForm.password || !barberForm.fullName) {
-      alert('E-posta, şifre ve ad zorunludur.');
+      toast('E-posta, şifre ve ad zorunludur.');
       return;
     }
     setBarberSaving(true);
@@ -178,7 +181,7 @@ const ShopCard = ({ shop, onUpdated }) => {
       setShowAddBarber(false);
       onUpdated();
     } catch (err) {
-      alert(err.response?.data?.error || 'Berber eklenemedi.');
+      toast(err.response?.data?.error || 'Berber eklenemedi.');
     } finally {
       setBarberSaving(false);
     }

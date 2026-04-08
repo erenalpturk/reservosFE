@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import Button from '../../components/Button';
+import { useToast } from '../../components/Toast';
 
 const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
+  const toast = useToast();
   const [form, setForm] = useState({
     barberId: currentUser.isOwner ? '' : currentUser.barberId,
     serviceId:
@@ -36,7 +38,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
   const handleSubmit = async () => {
     if (!form.serviceId || !form.startsAt || !form.fullName) {
-      alert('Hizmet, saat ve ad zorunludur.');
+      toast('Hizmet, saat ve ad zorunludur.');
       return;
     }
     const endsAt = computeEndsAt(form.startsAt, selectedService);
@@ -55,7 +57,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.error || 'Walk-in eklenemedi.');
+      toast(err.response?.data?.error || 'Walk-in eklenemedi.');
     } finally {
       setSubmitting(false);
     }

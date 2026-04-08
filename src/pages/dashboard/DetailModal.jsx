@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import Button from '../../components/Button';
 import { STATUS_LABELS, STATUS_COLORS, fmtTime } from './utils';
+import { useToast } from '../../components/Toast';
 
 const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
   const [loading, setLoading] = useState(null);
+  const toast = useToast();
   const isPast = new Date(appt.starts_at) < new Date();
 
   const doAction = async (action) => {
     setLoading(action);
     try { await onAction(appt.id, action); onClose(); }
-    catch { alert('İşlem başarısız.'); setLoading(null); }
+    catch { toast('İşlem başarısız.'); setLoading(null); }
   };
 
   const doCancel = async () => {
     if (!window.confirm('Randevuyu iptal etmek istediğinize emin misiniz?')) return;
     setLoading('cancel');
     try { await onCancel(appt.id); onClose(); }
-    catch { alert('İptal başarısız.'); setLoading(null); }
+    catch { toast('İptal başarısız.'); setLoading(null); }
   };
 
   return (

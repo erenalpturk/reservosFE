@@ -5,9 +5,11 @@ import StepIndicator from '../components/StepIndicator';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { useToast } from '../components/Toast';
 
 const CustomerPage = () => {
   const { shopSlug } = useParams();
+  const toast = useToast();
 
   const [shop, setShop] = useState(null);
   const [step, setStep] = useState(1);
@@ -18,7 +20,7 @@ const CustomerPage = () => {
   // Form State
   const [selectedService, setSelectedService] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availability, setAvailability] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -82,7 +84,7 @@ const CustomerPage = () => {
 
   const handleCompleteBooking = async () => {
     if (otpCode !== sentOtp) {
-      alert('Kod hatalı. Tekrar deneyin.');
+      toast('Kod hatalı. Tekrar deneyin.');
       return;
     }
     setSubmitting(true);
@@ -103,7 +105,7 @@ const CustomerPage = () => {
       await api.post('/appointments', payload);
       setStep(7);
     } catch (err) {
-      alert(err.response?.data?.error || 'Rezervasyon başarısız.');
+      toast(err.response?.data?.error || 'Rezervasyon başarısız.');
     } finally {
       setSubmitting(false);
     }
@@ -178,6 +180,29 @@ const CustomerPage = () => {
               ← Geri
             </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Tarih Seçin</h2>
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => {
+                  setSelectedDate(today);
+                  fetchAvailability(today);
+                  setStep(4);
+                }}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg border transition-colors ${selectedDate === today ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-500'}`}
+              >
+                Bugün
+              </button>
+              <button
+                onClick={() => {
+                  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                  setSelectedDate(tomorrow);
+                  fetchAvailability(tomorrow);
+                  setStep(4);
+                }}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg border transition-colors ${selectedDate === new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-600 border-zinc-300 hover:border-zinc-500'}`}
+              >
+                Yarın
+              </button>
+            </div>
             <Input
               type="date"
               label="Randevu Tarihi"
