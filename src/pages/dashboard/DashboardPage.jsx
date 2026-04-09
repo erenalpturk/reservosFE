@@ -9,7 +9,11 @@ import DayView from './DayView';
 import WeekView from './WeekView';
 import ThemeToggle from '../../components/ThemeToggle';
 import { useAuthStore } from '../../stores/authStore';
+import { useToast } from '../../components/Toast';
+import { setupFcmForCurrentDevice } from '../../lib/fcm';
 import { todayStr, getMondayOf, getWeekDays, toLocalDate, toDateStr } from './utils';
+
+const REGISTERED_TOKEN_KEY = 'fcm:registered-token';
 
 const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [tab, setTab] = useState('program');
@@ -28,6 +32,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [walkInStartsAt, setWalkInStartsAt] = useState(null);
   const [contentHeight, setContentHeight] = useState('auto');
   const { user, logout } = useAuthStore();
+  const toast = useToast();
   const navigate = useNavigate();
   const topFixedRef = useRef(null);
   const bottomFixedRef = useRef(null);
@@ -81,6 +86,30 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const handleCancel = async (id) => {
     await api.delete(`/appointments/${id}`);
     await Promise.all([fetchAppointments(), fetchAllPendingAppointments()]);
+  };
+
+  const ensureNotificationPermission = async () => {
+    try {
+      const result = await setupFcmForCurrentDevice();
+      if (!result.ok) {
+        if (result.reason === 'permission_denied') {
+          toast('Bildirim izni kapali. Tarayici ayarlarindan izin verin.', 'info');
+        }
+        return;
+      }
+
+      const alreadyRegistered = localStorage.getItem(REGISTERED_TOKEN_KEY);
+      if (alreadyRegistered === result.token) return;
+
+      await api.post('/notifications/fcm-token', {
+        token: result.token,
+        platform: 'web',
+      });
+      localStorage.setItem(REGISTERED_TOKEN_KEY, result.token);
+      toast('Bildirimler etkinlestirildi.', 'success');
+    } catch (err) {
+      console.error('FCM manuel kayit hatasi:', err.message);
+    }
   };
 
   const shiftWeek = (dir) => {
@@ -167,7 +196,10 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
               )}
               <button
                 type="button"
-                onClick={() => setShowPendingModal(true)}
+                onClick={() => {
+                  ensureNotificationPermission();
+                  setShowPendingModal(true);
+                }}
                 className="relative h-8 w-8 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all"
                 aria-label="Bekleyen randevu bildirimlerini aç"
               >
