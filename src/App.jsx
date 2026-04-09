@@ -31,6 +31,28 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Giriş yapmışsa dashboard'a yönlendir
+const HomeRoute = () => {
+  const token = useAuthStore(state => state.token);
+  const user = useAuthStore(state => state.user);
+  if (token) {
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <LandingPage />;
+};
+
+// Login sayfası: zaten giriş yapmışsa dashboard'a yönlendir
+const LoginRoute = () => {
+  const token = useAuthStore(state => state.token);
+  const user = useAuthStore(state => state.user);
+  if (token) {
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <LoginPage />;
+};
+
 function App() {
   const { isDark, toggleTheme } = useTheme();
 
@@ -39,7 +61,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Karşılama */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<HomeRoute />} />
 
         {/* Dükkan Seçimi */}
         <Route path="/book" element={<ShopSelectPage />} />
@@ -48,7 +70,7 @@ function App() {
         <Route path="/book/:shopSlug" element={<CustomerPage />} />
 
         {/* Giriş */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginRoute />} />
 
         {/* Berber Paneli */}
         <Route
