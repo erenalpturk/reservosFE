@@ -16,6 +16,15 @@ export const hasFirebaseConfig = Boolean(
   firebaseConfig.appId
 );
 
+export function getMissingFirebaseConfigKeys() {
+  const missing = [];
+  if (!firebaseConfig.apiKey) missing.push('VITE_FIREBASE_API_KEY');
+  if (!firebaseConfig.projectId) missing.push('VITE_FIREBASE_PROJECT_ID');
+  if (!firebaseConfig.messagingSenderId) missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
+  if (!firebaseConfig.appId) missing.push('VITE_FIREBASE_APP_ID');
+  return missing;
+}
+
 let appInstance = null;
 
 export function getFirebaseApp() {

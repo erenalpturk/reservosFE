@@ -15,11 +15,18 @@ import { todayStr, getMondayOf, getWeekDays, toLocalDate, toDateStr } from './ut
 
 const REGISTERED_TOKEN_KEY = 'fcm:registered-token';
 
-function getFcmErrorMessage(reason) {
+function getFcmErrorMessage(result) {
+  const reason = result?.reason;
   if (reason === 'permission_denied') return 'Bildirim izni kapali. Tarayici ayarlarindan izin verin.';
   if (reason === 'ios_requires_standalone') return 'iPhone icin uygulamayi Ana Ekrana ekleyip oradan acin.';
   if (reason === 'insecure_context') return 'Bildirimler icin HTTPS veya localhost gerekir.';
-  if (reason === 'missing_config') return 'Firebase ayarlari eksik. Ortam degiskenlerini kontrol edin.';
+  if (reason === 'missing_config') {
+    const missing = Array.isArray(result?.missingKeys) ? result.missingKeys : [];
+    if (missing.length > 0) {
+      return `Firebase ayarlari eksik: ${missing.join(', ')}`;
+    }
+    return 'Firebase ayarlari eksik. Ortam degiskenlerini kontrol edin.';
+  }
   return 'Bu cihazda bildirim desteklenmiyor veya kurulum tamamlanmamis.';
 }
 
@@ -100,7 +107,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     try {
       const result = await setupFcmForCurrentDevice();
       if (!result.ok) {
-        toast(getFcmErrorMessage(result.reason), 'info');
+        toast(getFcmErrorMessage(result), 'info');
         return;
       }
 

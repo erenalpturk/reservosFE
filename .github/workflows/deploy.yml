@@ -26,6 +26,24 @@ jobs:
             # 2. Frontend Güncelleme
             cd /root/.openclaw/workspace/barberappFront
             git pull origin main
+
+            # Frontend env dosyasini her deploy'da secrets ile olustur
+            cat > .env <<EOF
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}
+            VITE_FIREBASE_VAPID_KEY=${{ secrets.VITE_FIREBASE_VAPID_KEY }}
+            EOF
+
+            if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ] || [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ] || [ -z "${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" ] || [ -z "${{ secrets.VITE_FIREBASE_APP_ID }}" ] || [ -z "${{ secrets.VITE_FIREBASE_VAPID_KEY }}" ]; then
+              echo "❌ Frontend Firebase secrets eksik. GitHub Secrets'i kontrol edin."
+              exit 1
+            fi
+
             npm install
             npm run build
             rm -rf /var/www/barberapp/*

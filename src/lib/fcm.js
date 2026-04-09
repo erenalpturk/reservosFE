@@ -1,5 +1,5 @@
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
-import { firebaseConfig, getFirebaseApp, hasFirebaseConfig } from './firebase';
+import { firebaseConfig, getFirebaseApp, getMissingFirebaseConfigKeys, hasFirebaseConfig } from './firebase';
 
 const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
@@ -37,7 +37,9 @@ export async function canUseFcm() {
 
 export async function setupFcmForCurrentDevice() {
   if (!hasFirebaseConfig || !vapidKey) {
-    return { ok: false, reason: 'missing_config' };
+    const missingKeys = getMissingFirebaseConfigKeys();
+    if (!vapidKey) missingKeys.push('VITE_FIREBASE_VAPID_KEY');
+    return { ok: false, reason: 'missing_config', missingKeys };
   }
   if (typeof window === 'undefined') {
     return { ok: false, reason: 'unsupported_or_missing_config' };
