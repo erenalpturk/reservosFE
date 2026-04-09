@@ -19,8 +19,8 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data;
-      setAuth(user, token);
+      const { user, token, refreshToken } = response.data;
+      setAuth(user, token, refreshToken);
       navigate(user.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       toast(err.response?.data?.error || 'Bir hata oluştu.');
