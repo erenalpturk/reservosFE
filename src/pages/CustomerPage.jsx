@@ -20,7 +20,7 @@ const CustomerPage = () => {
 
   // Form State
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedBarber, setSelectedBarber] = useState(null);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availability, setAvailability] = useState([]);
@@ -110,8 +110,8 @@ const CustomerPage = () => {
         phone: formattedPhone,
         otpCode,
         fullName: contactInfo.fullName,
-        shopId: shop.id,
-        barberId: selectedBarber.id,
+        businessId: shop.id,
+        staffId: selectedStaff.id,
         serviceId: selectedService.id,
         startsAt: selectedSlot.startsAt,
         endsAt: selectedSlot.endsAt,
@@ -134,7 +134,7 @@ const CustomerPage = () => {
   );
   if (error) return <div className="p-20 text-red-500 text-center font-bold">{error}</div>;
 
-  const currentBarberSlots = availability.find(a => a.barber.id === selectedBarber?.id)?.slots || [];
+  const currentStaffSlots = availability.find(a => a.staff.id === selectedStaff?.id)?.slots || [];
   const selectedDateLabel = selectedDate
     ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString('tr-TR', { weekday: 'long', day: '2-digit', month: 'long' })
     : null;
@@ -149,7 +149,7 @@ const CustomerPage = () => {
     : null;
   const summaryItems = [
     { label: 'Hizmet', value: selectedService?.name || null },
-    { label: 'Berber', value: selectedBarber?.full_name || null },
+    { label: 'Personel', value: selectedStaff?.full_name || null },
     { label: 'Tarih', value: selectedDateLabel },
     { label: 'Saat', value: selectedTimeLabel },
     { label: 'Müşteri', value: contactInfo.fullName || null },
@@ -209,10 +209,10 @@ const CustomerPage = () => {
             </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Berber Seçin</h2>
             <div className="space-y-3">
-              {shop.barbers.map(b => (
+              {shop.staff.map(b => (
                 <Card
                   key={b.id}
-                  onClick={() => { setSelectedBarber(b); setStep(3); }}
+                  onClick={() => { setSelectedStaff(b); setStep(3); }}
                   className="flex items-center gap-4"
                 >
                   <div className="w-10 h-10 rounded-full shadow-inner flex-shrink-0" style={{ backgroundColor: b.color_hex }}></div>
@@ -282,7 +282,7 @@ const CustomerPage = () => {
               <div className="flex justify-center py-12">
                 <div className="animate-spin h-8 w-8 border-4 border-zinc-900 dark:border-zinc-300 border-t-transparent rounded-full"></div>
               </div>
-            ) : currentBarberSlots.length === 0 ? (
+            ) : currentStaffSlots.length === 0 ? (
               <div className="text-center py-12 animate-fadeIn">
                 <div className="text-4xl mb-4">📅</div>
                 <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
@@ -297,7 +297,7 @@ const CustomerPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {currentBarberSlots.map((slot, i) => (
+                {currentStaffSlots.map((slot, i) => (
                   <button
                     key={i}
                     onClick={() => { setSelectedSlot(slot); setStep(5); }}
@@ -408,7 +408,7 @@ const CustomerPage = () => {
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Berber</span>
-                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedBarber?.full_name}</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedStaff?.full_name}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Tarih</span>
@@ -455,7 +455,7 @@ const CustomerPage = () => {
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Berber</span>
-                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedBarber?.full_name}</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedStaff?.full_name}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Tarih</span>

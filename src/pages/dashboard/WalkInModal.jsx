@@ -6,7 +6,7 @@ import { useToast } from '../../components/Toast';
 const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
   const toast = useToast();
   const [form, setForm] = useState({
-    barberId: currentUser.isOwner ? '' : currentUser.barberId,
+    staffId: currentUser.isOwner ? '' : currentUser.staffId,
     serviceId:
       shop.services.find(s => s.is_active !== false && s.name?.trim() === 'Saç Kesimi')?.id || '',
     startsAt: initialStartsAt || '',
@@ -47,7 +47,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     setSubmitting(true);
     try {
       await api.post('/appointments/walk-in', {
-        barberId: form.barberId || undefined,
+        staffId: form.staffId || undefined,
         serviceId: form.serviceId,
         startsAt: new Date(form.startsAt).toISOString(),
         endsAt,
@@ -63,7 +63,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     }
   };
 
-  const activeBarbers = shop.barbers.filter(b => b.is_active !== false);
+  const activeStaff = shop.staff.filter(b => b.is_active !== false);
   const activeServices = shop.services.filter(s => s.is_active !== false);
 
   return (
@@ -81,12 +81,12 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
             <div>
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Berber</label>
               <select
-                value={form.barberId}
-                onChange={e => setForm({ ...form, barberId: e.target.value })}
+                value={form.staffId}
+                onChange={e => setForm({ ...form, staffId: e.target.value })}
                 className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
               >
-                <option value={currentUser.barberId}>{currentUser.fullName}</option>
-                {activeBarbers.map(b => (
+                <option value={currentUser.staffId}>{currentUser.fullName}</option>
+                {activeStaff.map(b => (
                   <option key={b.id} value={b.id}>{b.full_name}</option>
                 ))}
               </select>

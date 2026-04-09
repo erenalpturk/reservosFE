@@ -103,7 +103,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
                   )}
                   {positioned.map(({ appt, col, totalCols }) => {
                     const { top, height } = getApptPos(appt, startHour);
-                    const color = appt.barbers?.color_hex || '#71717a';
+                    const color = appt.staff?.color_hex || '#71717a';
                     const isHighlighted = appt.id === highlightApptId;
                     const GAP = 1;
                     const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;

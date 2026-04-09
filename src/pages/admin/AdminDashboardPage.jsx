@@ -164,20 +164,20 @@ const ShopCard = ({ shop, onUpdated }) => {
     }
   };
 
-  const toggleBarber = async (barberId, currentActive) => {
+  const toggleStaffActive = async (staffId, currentActive) => {
     try {
-      await api.patch(`/admin/barbers/${barberId}`, { is_active: !currentActive });
+      await api.patch(`/admin/barbers/${staffId}`, { is_active: !currentActive });
       onUpdated();
     } catch {
       toast('İşlem başarısız.');
     }
   };
 
-  const toggleOwner = async (barberId, currentOwner) => {
+  const toggleOwner = async (staffId, currentOwner) => {
     if (currentOwner) return;
-    if (!window.confirm('Bu berberi dükkan sahibi yapacaksınız. Emin misiniz?')) return;
+    if (!window.confirm('Bu personeli işletme sahibi yapacaksınız. Emin misiniz?')) return;
     try {
-      await api.patch(`/admin/barbers/${barberId}`, { is_owner: true });
+      await api.patch(`/admin/barbers/${staffId}`, { is_owner: true });
       onUpdated();
     } catch {
       toast('İşlem başarısız.');
@@ -202,8 +202,8 @@ const ShopCard = ({ shop, onUpdated }) => {
     }
   };
 
-  const activeBarbers = shop.barbers?.filter(b => b.is_active) || [];
-  const allBarbers = shop.barbers || [];
+  const activeStaff = shop.staff?.filter(b => b.is_active) || [];
+  const allStaff = shop.staff || [];
 
   return (
     <div className={`bg-white rounded-3xl border overflow-hidden mb-4 ${shop.is_active ? 'border-zinc-100' : 'border-zinc-200 opacity-60'}`}>
@@ -222,7 +222,7 @@ const ShopCard = ({ shop, onUpdated }) => {
         {shop.address && <div className="text-xs text-zinc-400 mb-3">{shop.address}</div>}
 
         <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">
-          <span>{activeBarbers.length} aktif berber</span>
+          <span>{activeStaff.length} aktif personel</span>
           <span>·</span>
           <span>{new Date(shop.created_at).toLocaleDateString('tr-TR')}</span>
         </div>
@@ -252,10 +252,10 @@ const ShopCard = ({ shop, onUpdated }) => {
       {expanded && (
         <div className="border-t border-zinc-50 px-5 pb-5 pt-4 space-y-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Berberler</p>
-          {allBarbers.length === 0 && (
+          {allStaff.length === 0 && (
             <p className="text-xs text-zinc-400 font-bold">Berber yok.</p>
           )}
-          {allBarbers.map(b => (
+          {allStaff.map(b => (
             <div key={b.id} className={`flex items-center gap-3 p-3 rounded-2xl ${b.is_active ? 'bg-zinc-50' : 'bg-zinc-50 opacity-50'}`}>
               <div className="w-7 h-7 rounded-full flex-shrink-0" style={{ backgroundColor: b.color_hex }} />
               <div className="flex-1 min-w-0">
@@ -274,7 +274,7 @@ const ShopCard = ({ shop, onUpdated }) => {
                   </button>
                 )}
                 <button
-                  onClick={() => toggleBarber(b.id, b.is_active)}
+                  onClick={() => toggleStaffActive(b.id, b.is_active)}
                   className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${
                     b.is_active ? 'text-red-300 hover:text-red-500' : 'text-green-400 hover:text-green-600'
                   }`}
@@ -405,7 +405,7 @@ const AdminDashboardPage = ({ isDark, onToggleTheme }) => {
         <div className="px-6 mb-6">
           <div className="grid grid-cols-3 gap-3">
             <StatCard label="Aktif Dükkan" value={stats?.activeShops} sub={`/ ${stats?.totalShops} toplam`} />
-            <StatCard label="Aktif Berber" value={stats?.totalBarbers} />
+            <StatCard label="Aktif Berber" value={stats?.totalStaff} />
             <StatCard label="Bugün" value={stats?.todayAppointments} sub="randevu" />
           </div>
         </div>

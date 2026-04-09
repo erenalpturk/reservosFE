@@ -196,7 +196,7 @@ const AppointmentLookupPage = () => {
                       </div>
                       <div>
                         <p className="text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Berber</p>
-                        <p className="font-bold mt-1">{appointment.barberName || '-'}</p>
+                        <p className="font-bold mt-1">{appointment.staffName || '-'}</p>
                       </div>
                       <div>
                         <p className="text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Sure</p>

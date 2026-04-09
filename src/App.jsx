@@ -14,8 +14,8 @@ import FcmManager from './components/FcmManager';
 import { useAuthStore } from './stores/authStore';
 import useTheme from './hooks/useTheme';
 
-// Sadece giriş yapmış berberler (owner veya employee)
-const BarberRoute = ({ children }) => {
+// Sadece giriş yapmış staff (owner veya employee)
+const StaffRoute = ({ children }) => {
   const user = useAuthStore(state => state.user);
   const token = useAuthStore(state => state.token);
   if (!token) return <Navigate to="/login" replace />;
@@ -76,13 +76,13 @@ function App() {
         {/* Giriş */}
         <Route path="/login" element={<LoginRoute />} />
 
-        {/* Berber Paneli */}
+        {/* Staff Paneli */}
         <Route
           path="/dashboard"
           element={
-            <BarberRoute>
+            <StaffRoute>
               <DashboardPage isDark={isDark} onToggleTheme={toggleTheme} />
-            </BarberRoute>
+            </StaffRoute>
           }
         />
 

@@ -62,10 +62,10 @@ const DetailModal = ({ appt, user, onClose, onAction, onCancel }) => {
             <span className="font-bold text-zinc-700">{appt.services?.name}</span>
             <span className="text-xs text-zinc-400">({appt.services?.duration_min} dk)</span>
           </div>
-          {user?.isOwner && appt.barbers && (
+          {user?.isOwner && appt.staff && (
             <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: appt.barbers.color_hex }} />
-              <span className="font-bold text-zinc-700">{appt.barbers.full_name}</span>
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: appt.staff.color_hex }} />
+              <span className="font-bold text-zinc-700">{appt.staff.full_name}</span>
             </div>
           )}
         </div>

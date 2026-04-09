@@ -133,7 +133,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
 
 
-  const shopHours = shop?.shop_hours || [];
+  const shopHours = shop?.business_hours || [];
   const startHour = shopHours.length
     ? Math.min(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.open_time, 10)))
     : 9;

@@ -145,7 +145,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
 
-  const activeBarbers = shop?.barbers?.filter(b => b.is_active !== false) || [];
+  const activeStaff = shop?.staff?.filter(b => b.is_active !== false) || [];
 
   const handleDeactivate = async (id, name) => {
     if (!window.confirm(`${name} adlı berberi kaldırmak istediğinize emin misiniz?`)) return;
@@ -182,7 +182,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
 
   return (
     <div className="pt-4 space-y-3">
-      {activeBarbers.map(b => (
+      {activeStaff.map(b => (
         <div key={b.id}>
           {editingId === b.id ? (
             <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl space-y-3 border-2 border-zinc-200 dark:border-zinc-700">
@@ -406,9 +406,9 @@ const HoursSection = ({ shop, onUpdated }) => {
   }));
 
   const initialHours = () => {
-    if (!shop?.shop_hours?.length) return defaultHours;
+    if (!shop?.business_hours?.length) return defaultHours;
     return defaultHours.map(def => {
-      const existing = shop.shop_hours.find(h => h.day_of_week === def.day_of_week);
+      const existing = shop.business_hours.find(h => h.day_of_week === def.day_of_week);
       return existing || def;
     });
   };
@@ -475,10 +475,10 @@ const HoursSection = ({ shop, onUpdated }) => {
 // ─── İzin / Blok ────────────────────────────────────────────────────
 const BlockSection = ({ shop, user, onUpdated }) => {
   const toast = useToast();
-  const [form, setForm] = useState({ startsAt: '', endsAt: '', reason: '', barberId: '' });
+  const [form, setForm] = useState({ startsAt: '', endsAt: '', reason: '', staffId: '' });
   const [saving, setSaving] = useState(false);
 
-  const activeBarbers = shop?.barbers?.filter(b => b.is_active !== false) || [];
+  const activeStaff = shop?.staff?.filter(b => b.is_active !== false) || [];
 
   const handleAdd = async () => {
     if (!form.startsAt || !form.endsAt) {
@@ -491,9 +491,9 @@ const BlockSection = ({ shop, user, onUpdated }) => {
         startsAt: new Date(form.startsAt).toISOString(),
         endsAt: new Date(form.endsAt).toISOString(),
         reason: form.reason || undefined,
-        barberId: user.isOwner ? (form.barberId || undefined) : undefined,
+        staffId: user.isOwner ? (form.staffId || undefined) : undefined,
       });
-      setForm({ startsAt: '', endsAt: '', reason: '', barberId: '' });
+      setForm({ startsAt: '', endsAt: '', reason: '', staffId: '' });
     } catch (err) {
       toast(err.response?.data?.error || 'Blok eklenemedi.');
     } finally {
@@ -509,12 +509,12 @@ const BlockSection = ({ shop, user, onUpdated }) => {
             Berber <span className="normal-case font-normal text-zinc-300 dark:text-zinc-600">(boş = tüm dükkan)</span>
           </label>
           <select
-            value={form.barberId}
-            onChange={e => setForm({ ...form, barberId: e.target.value })}
+            value={form.staffId}
+            onChange={e => setForm({ ...form, staffId: e.target.value })}
             className="w-full p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
           >
             <option value="">Tüm dükkan</option>
-            {activeBarbers.map(b => (
+            {activeStaff.map(b => (
               <option key={b.id} value={b.id}>{b.full_name}</option>
             ))}
           </select>
