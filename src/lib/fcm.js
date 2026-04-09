@@ -3,6 +3,18 @@ import { firebaseConfig, getFirebaseApp, hasFirebaseConfig } from './firebase';
 
 const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
+function isIosDevice() {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent);
+}
+
+function isStandaloneMode() {
+  if (typeof window === 'undefined') return false;
+  const mediaStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches;
+  const safariStandalone = window.navigator?.standalone === true;
+  return Boolean(mediaStandalone || safariStandalone);
+}
+
 function buildServiceWorkerUrl() {
   const params = new URLSearchParams();
 
@@ -18,13 +30,30 @@ export async function canUseFcm() {
   if (typeof window === 'undefined') return false;
   if (!('Notification' in window)) return false;
   if (!('serviceWorker' in navigator)) return false;
+  if (!window.isSecureContext) return false;
 
   return isSupported();
 }
 
 export async function setupFcmForCurrentDevice() {
-  const canUse = await canUseFcm();
-  if (!canUse) return { ok: false, reason: 'unsupported_or_missing_config' };
+  if (!hasFirebaseConfig || !vapidKey) {
+    return { ok: false, reason: 'missing_config' };
+  }
+  if (typeof window === 'undefined') {
+    return { ok: false, reason: 'unsupported_or_missing_config' };
+  }
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    return { ok: false, reason: 'unsupported_or_missing_config' };
+  }
+  if (!window.isSecureContext) {
+    return { ok: false, reason: 'insecure_context' };
+  }
+  if (isIosDevice() && !isStandaloneMode()) {
+    return { ok: false, reason: 'ios_requires_standalone' };
+  }
+
+  const supported = await isSupported();
+  if (!supported) return { ok: false, reason: 'unsupported_or_missing_config' };
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {

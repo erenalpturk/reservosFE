@@ -68,13 +68,9 @@ const FcmManager = () => {
     let cancelled = false;
 
     const register = async () => {
-      const alreadyRegistered = localStorage.getItem(REGISTERED_TOKEN_KEY);
-
       try {
         const result = await setupFcmForCurrentDevice();
         if (!result.ok || cancelled) return;
-
-        if (alreadyRegistered === result.token) return;
 
         await api.post('/notifications/fcm-token', {
           token: result.token,
