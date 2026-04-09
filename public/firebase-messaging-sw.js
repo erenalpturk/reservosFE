@@ -26,12 +26,6 @@ if (hasRequiredConfig(config)) {
 
   var messaging = firebase.messaging();
   messaging.onBackgroundMessage(function (payload) {
-    // Notification payload varsa SDK zaten sistem bildirimi gosterebilir.
-    // Burada tekrar showNotification cagrisi yapmak cift bildirime yol acar.
-    if (payload && payload.notification) {
-      return;
-    }
-
     var notificationTitle = (payload.notification && payload.notification.title) || 'BarberApp';
     var notificationBody = (payload.notification && payload.notification.body) || 'Yeni bildirim var.';
 
