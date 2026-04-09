@@ -1,4 +1,4 @@
-import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
+import { deleteToken, getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { firebaseConfig, getFirebaseApp, getMissingFirebaseConfigKeys, hasFirebaseConfig } from './firebase';
 
 const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
@@ -35,7 +35,8 @@ export async function canUseFcm() {
   return isSupported();
 }
 
-export async function setupFcmForCurrentDevice() {
+export async function setupFcmForCurrentDevice(options = {}) {
+  const forceRefresh = Boolean(options.forceRefresh);
   if (!hasFirebaseConfig || !vapidKey) {
     const missingKeys = getMissingFirebaseConfigKeys();
     if (!vapidKey) missingKeys.push('VITE_FIREBASE_VAPID_KEY');
@@ -69,6 +70,15 @@ export async function setupFcmForCurrentDevice() {
     scope: '/firebase-cloud-messaging-push-scope',
   });
   const messaging = getMessaging(app);
+
+  if (forceRefresh) {
+    try {
+      await deleteToken(messaging);
+    } catch (err) {
+      console.error('FCM token yenileme oncesi silinemedi:', err.message);
+    }
+  }
+
   const token = await getToken(messaging, {
     vapidKey,
     serviceWorkerRegistration: swRegistration,

@@ -105,7 +105,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
   const ensureNotificationPermission = async () => {
     try {
-      const result = await setupFcmForCurrentDevice();
+      const result = await setupFcmForCurrentDevice({ forceRefresh: true });
       if (!result.ok) {
         toast(getFcmErrorMessage(result), 'info');
         return;
