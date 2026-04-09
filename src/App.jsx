@@ -9,6 +9,7 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import CancelPage from './pages/CancelPage';
 import InstallPrompt from './components/InstallPrompt';
+import FcmManager from './components/FcmManager';
 import { useAuthStore } from './stores/authStore';
 import useTheme from './hooks/useTheme';
 
@@ -76,6 +77,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    <FcmManager />
     <InstallPrompt />
     </ToastProvider>
   );
