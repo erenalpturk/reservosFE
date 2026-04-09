@@ -1,0 +1,34 @@
+name: Otomatik Sunucu Deploy
+
+on:
+  push:
+    branches:
+      - main  # Hangi branch'e push atınca çalışmasını istiyorsan (örn: master veya main)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sunucuya SSH ile bağlan ve komutları çalıştır
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 1. Backend Güncelleme
+            cd /root/.openclaw/workspace/barberappBackend
+            git pull origin main
+            npm install
+            pm2 restart all
+            echo "⚙️ Backend başarıyla güncellendi!"
+
+            # 2. Frontend Güncelleme
+            cd /root/.openclaw/workspace/barberappFront
+            git pull origin main
+            npm install
+            npm run build
+            rm -rf /var/www/barberapp/*
+            cp -r dist/* /var/www/barberapp/
+            systemctl reload nginx
+            echo "🎨 Frontend başarıyla güncellendi!"
