@@ -4,6 +4,7 @@ import { ToastProvider } from './components/Toast';
 import LandingPage from './pages/LandingPage';
 import ShopSelectPage from './pages/ShopSelectPage';
 import CustomerPage from './pages/CustomerPage';
+import AppointmentLookupPage from './pages/AppointmentLookupPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -68,6 +69,9 @@ function App() {
 
         {/* Rezervasyon */}
         <Route path="/book/:shopSlug" element={<CustomerPage />} />
+
+        {/* Musteri randevu sorgulama */}
+        <Route path="/appointments/query" element={<AppointmentLookupPage />} />
 
         {/* Giriş */}
         <Route path="/login" element={<LoginRoute />} />

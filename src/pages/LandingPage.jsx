@@ -19,6 +19,12 @@ const LandingPage = () => {
           Randevu Al
         </button>
         <button
+          onClick={() => navigate('/appointments/query')}
+          className="w-full py-4 border-2 border-zinc-900 dark:border-zinc-200 text-zinc-900 dark:text-zinc-100 font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900 transition-colors"
+        >
+          Randevu Sorgula
+        </button>
+        <button
           onClick={() => navigate('/login')}
           className="w-full py-4 border-2 border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 font-bold text-xs uppercase tracking-widest rounded-2xl hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
         >
