@@ -47,12 +47,12 @@ const LoginPage = () => {
         >
           ← Geri
         </button>
-        <h1 className="text-4xl font-black mb-10 text-center text-zinc-900 dark:text-zinc-100 uppercase tracking-tighter italic">BarberApp</h1>
+        <h1 className="text-4xl font-black mb-10 text-center text-zinc-900 dark:text-zinc-100 uppercase tracking-tighter italic">RezerveOS</h1>
         <form onSubmit={handleLogin} className="space-y-2">
           <Input 
             label="E-posta"
             type="email" 
-            placeholder="usta@berber.com" 
+            placeholder="uzman@isletme.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />

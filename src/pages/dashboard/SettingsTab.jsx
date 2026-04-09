@@ -98,7 +98,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
       </div>
 
       {[
-        { label: 'Dükkan Adı', key: 'name', placeholder: 'Maestro Berber' },
+        { label: 'Dükkan Adı', key: 'name', placeholder: 'Maestro' },
         { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
         { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
       ].map(({ label, key, placeholder }) => (
@@ -138,7 +138,7 @@ const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
   );
 };
 
-// ─── Berberler ──────────────────────────────────────────────────────
+// ─── Personeller ──────────────────────────────────────────────────────
 const BarbersSection = ({ shop, onUpdated }) => {
   const toast = useToast();
   const [editingId, setEditingId] = useState(null);
@@ -148,7 +148,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
   const activeStaff = shop?.staff?.filter(b => b.is_active !== false) || [];
 
   const handleDeactivate = async (id, name) => {
-    if (!window.confirm(`${name} adlı berberi kaldırmak istediğinize emin misiniz?`)) return;
+    if (!window.confirm(`${name} adlı personeli kaldırmak istediğinize emin misiniz?`)) return;
     try {
       await api.delete(`/shops/barbers/${id}`);
       setEditingId(null);
@@ -238,7 +238,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
       ))}
 
       <div className="p-3 border border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 text-xs font-bold text-zinc-500 dark:text-zinc-400">
-        Yeni berber ekleme işlemi sadece admin panelinden yapılabilir.
+        Yeni personel ekleme işlemi sadece admin panelinden yapılabilir.
       </div>
     </div>
   );
@@ -506,7 +506,7 @@ const BlockSection = ({ shop, user, onUpdated }) => {
       {user.isOwner && (
         <div>
           <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
-            Berber <span className="normal-case font-normal text-zinc-300 dark:text-zinc-600">(boş = tüm dükkan)</span>
+            Personel <span className="normal-case font-normal text-zinc-300 dark:text-zinc-600">(boş = tüm dükkan)</span>
           </label>
           <select
             value={form.staffId}
@@ -571,7 +571,7 @@ const SettingsTab = ({ shop, user, onShopUpdated }) => {
 
       {isOwner && (
         <>
-          <Section title="Berberler">
+          <Section title="Personeller">
             <BarbersSection shop={shop} onUpdated={onShopUpdated} />
           </Section>
           <Section title="Hizmetler">

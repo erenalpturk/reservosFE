@@ -66,7 +66,7 @@ const PendingAppointmentsModal = ({ appointments, user, onClose, onSelect, onSho
                     <div className="text-right">{fmtTime(appt.starts_at)} - {fmtTime(appt.ends_at)}</div>
                     <div className="truncate">{appt.services?.name || 'Hizmet yok'}</div>
                     <div className="text-right text-zinc-500">
-                      {user?.isOwner ? (appt.staff?.full_name || 'Berber yok') : 'Detayı aç'}
+                      {user?.isOwner ? (appt.staff?.full_name || 'Personel yok') : 'Detayı aç'}
                     </div>
                   </div>
 

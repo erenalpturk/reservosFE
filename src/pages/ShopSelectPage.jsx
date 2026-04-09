@@ -13,7 +13,7 @@ const ShopSelectPage = () => {
   useEffect(() => {
     api.get('/shops')
       .then(res => setShops(res.data.shops || []))
-      .catch(() => setError('Dükkanlar yüklenemedi.'))
+      .catch(() => setError('İşletmeler yüklenemedi.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -47,7 +47,7 @@ const ShopSelectPage = () => {
           {selectedCity ? selectedCity : 'Şehir Seçin'}
         </h1>
         <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
-          {selectedCity ? 'Dükkan seçin' : 'Bulunduğunuz şehri seçin'}
+          {selectedCity ? 'İşletme seçin' : 'Bulunduğunuz şehri seçin'}
         </p>
       </div>
 
@@ -62,7 +62,7 @@ const ShopSelectPage = () => {
               >
                 <span className="font-bold">{city}</span>
                 <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">
-                  {shops.filter(s => getCity(s) === city).length} dükkan →
+                  {shops.filter(s => getCity(s) === city).length} işletme →
                 </span>
               </Card>
             ))}

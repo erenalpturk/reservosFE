@@ -201,13 +201,13 @@ const CustomerPage = () => {
           </div>
         )}
 
-        {/* ADIM 2 — Berber Seçimi */}
+        {/* ADIM 2 — Personel Seçimi */}
         {step === 2 && (
           <div className="animate-fadeIn">
             <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
               ← Geri
             </button>
-            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Berber Seçin</h2>
+            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Personel Seçin</h2>
             <div className="space-y-3">
               {shop.staff.map(b => (
                 <Card
@@ -395,7 +395,7 @@ const CustomerPage = () => {
               <div className="text-7xl mb-6">👊</div>
               <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">İstek Gönderildi!</h2>
               <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500 leading-relaxed uppercase tracking-widest">
-                Berberiniz isteğinizi inceliyor.<br />Onay SMS ile gelecek.
+                Personeliniz isteğinizi inceliyor.<br />Onay SMS ile gelecek.
               </p>
               <div className="mt-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-4 space-y-3 text-left">
                 <div className="flex justify-between gap-3">
@@ -407,7 +407,7 @@ const CustomerPage = () => {
                   <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedService?.name}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Berber</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Personel</span>
                   <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedStaff?.full_name}</span>
                 </div>
                 <div className="flex justify-between gap-3">
@@ -454,7 +454,7 @@ const CustomerPage = () => {
                   <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedService?.name}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Berber</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Personel</span>
                   <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedStaff?.full_name}</span>
                 </div>
                 <div className="flex justify-between gap-3">

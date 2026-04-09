@@ -76,10 +76,10 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
         </div>
 
         <div className="space-y-4">
-          {/* Berber seçimi (sadece sahip için) */}
+          {/* Personel seçimi (sadece sahip için) */}
           {currentUser.isOwner && (
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Berber</label>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Personel</label>
               <select
                 value={form.staffId}
                 onChange={e => setForm({ ...form, staffId: e.target.value })}

@@ -49,7 +49,7 @@ const CancelPage = () => {
     <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl flex flex-col animate-fadeIn">
       <div className="bg-zinc-900 text-white p-8">
         <h1 className="text-2xl font-black uppercase tracking-tighter italic">Randevu İptali</h1>
-        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Barberos</p>
+        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">ReservOS</p>
       </div>
 
       <div className="p-8 flex-1 flex flex-col items-center justify-center">
@@ -81,7 +81,7 @@ const CancelPage = () => {
             <div className="text-6xl mb-6">✅</div>
             <h2 className="text-2xl font-black uppercase tracking-tight mb-3">İptal Edildi</h2>
             <p className="text-sm text-zinc-400 font-bold uppercase tracking-widest leading-relaxed">
-              Randevunuz başarıyla iptal edildi.<br />Berbere bilgi SMS'i gönderildi.
+              Randevunuz başarıyla iptal edildi.<br />Uzmana bilgi SMS'i gönderildi.
             </p>
           </div>
         )}
@@ -98,7 +98,7 @@ const CancelPage = () => {
                 href={`tel:${shopPhone}`}
                 className="inline-block bg-zinc-900 text-white font-black uppercase tracking-widest text-sm px-6 py-4 rounded-2xl transition-all active:scale-95"
               >
-                Berberi Ara: {shopPhone}
+                İşletmeyi Ara: {shopPhone}
               </a>
             )}
           </div>

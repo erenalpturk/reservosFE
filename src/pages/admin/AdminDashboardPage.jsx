@@ -68,8 +68,8 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
         <div className="space-y-5">
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Dükkan Bilgileri</p>
           {[
-            { label: 'Dükkan Adı *', key: 'name', placeholder: 'Maestro Berber' },
-            { label: 'Slug * (URL)', key: 'slug', placeholder: 'maestro-berber' },
+            { label: 'Dükkan Adı *', key: 'name', placeholder: 'Maestro Kuaför' },
+            { label: 'Slug * (URL)', key: 'slug', placeholder: 'maestro-kuafor' },
             { label: 'Telefon', key: 'phone', placeholder: '0216 000 00 00' },
             { label: 'Adres', key: 'address', placeholder: 'Kadıköy Mah. Moda Cad. No:1' },
           ].map(({ label, key, placeholder }) => (
@@ -104,7 +104,7 @@ const CreateShopModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="border-t border-zinc-100 pt-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Dükkan Sahibi Berberi</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Dükkan Sahibi Personel</p>
             {[
               { label: 'Ad Soyad *', key: 'ownerFullName', placeholder: 'Ahmet Usta', type: 'text' },
               { label: 'E-posta *', key: 'ownerEmail', placeholder: 'ahmet@mail.com', type: 'email' },
@@ -196,7 +196,7 @@ const ShopCard = ({ shop, onUpdated }) => {
       setShowAddBarber(false);
       onUpdated();
     } catch (err) {
-      toast(err.response?.data?.error || 'Berber eklenemedi.');
+      toast(err.response?.data?.error || 'Personel eklenemedi.');
     } finally {
       setBarberSaving(false);
     }
@@ -232,7 +232,7 @@ const ShopCard = ({ shop, onUpdated }) => {
             onClick={() => setExpanded(e => !e)}
             className="flex-1 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-zinc-100 text-zinc-500 hover:border-zinc-300 transition-all"
           >
-            {expanded ? 'Gizle' : 'Berberleri Gör'}
+            {expanded ? 'Gizle' : 'Personelleri Gör'}
           </button>
           <button
             onClick={toggleActive}
@@ -248,12 +248,12 @@ const ShopCard = ({ shop, onUpdated }) => {
         </div>
       </div>
 
-      {/* Berberler listesi */}
+      {/* Personeller listesi */}
       {expanded && (
         <div className="border-t border-zinc-50 px-5 pb-5 pt-4 space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Berberler</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Personeller</p>
           {allStaff.length === 0 && (
-            <p className="text-xs text-zinc-400 font-bold">Berber yok.</p>
+            <p className="text-xs text-zinc-400 font-bold">Personel yok.</p>
           )}
           {allStaff.map(b => (
             <div key={b.id} className={`flex items-center gap-3 p-3 rounded-2xl ${b.is_active ? 'bg-zinc-50' : 'bg-zinc-50 opacity-50'}`}>
@@ -285,17 +285,17 @@ const ShopCard = ({ shop, onUpdated }) => {
             </div>
           ))}
 
-          {/* Berber Ekle */}
+          {/* Personel Ekle */}
           {!showAddBarber ? (
             <button
               onClick={() => setShowAddBarber(true)}
               className="w-full p-3 border-2 border-dashed border-zinc-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 transition-all mt-2"
             >
-              + Berber Ekle
+              + Personel Ekle
             </button>
           ) : (
             <div className="p-4 bg-zinc-50 rounded-2xl space-y-3 border-2 border-zinc-200 mt-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Yeni Berber</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Yeni Personel</p>
               {[
                 { label: 'Ad Soyad', key: 'fullName', placeholder: 'Ahmet Usta', type: 'text' },
                 { label: 'E-posta', key: 'email', placeholder: 'ahmet@mail.com', type: 'email' },
@@ -405,7 +405,7 @@ const AdminDashboardPage = ({ isDark, onToggleTheme }) => {
         <div className="px-6 mb-6">
           <div className="grid grid-cols-3 gap-3">
             <StatCard label="Aktif Dükkan" value={stats?.activeShops} sub={`/ ${stats?.totalShops} toplam`} />
-            <StatCard label="Aktif Berber" value={stats?.totalStaff} />
+            <StatCard label="Aktif Personel" value={stats?.totalStaff} />
             <StatCard label="Bugün" value={stats?.todayAppointments} sub="randevu" />
           </div>
         </div>
