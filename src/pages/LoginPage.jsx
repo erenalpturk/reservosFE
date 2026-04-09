@@ -14,6 +14,14 @@ const LoginPage = () => {
   const setAuth = useAuthStore(state => state.setAuth);
   const toast = useToast();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/');
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -32,6 +40,13 @@ const LoginPage = () => {
   return (
     <div className="h-dvh overflow-hidden bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-6 animate-fadeIn transition-colors">
       <div className="bg-white dark:bg-zinc-900 p-12 rounded-[3rem] shadow-2xl w-full max-w-md border border-zinc-100 dark:border-zinc-800">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+        >
+          ← Geri
+        </button>
         <h1 className="text-4xl font-black mb-10 text-center text-zinc-900 dark:text-zinc-100 uppercase tracking-tighter italic">BarberApp</h1>
         <form onSubmit={handleLogin} className="space-y-2">
           <Input 

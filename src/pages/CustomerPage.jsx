@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import StepIndicator from '../components/StepIndicator';
 import Card from '../components/Card';
@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast';
 
 const CustomerPage = () => {
   const { shopSlug } = useParams();
+  const navigate = useNavigate();
   const toast = useToast();
 
   const [shop, setShop] = useState(null);
@@ -163,7 +164,7 @@ const CustomerPage = () => {
 
       <StepIndicator currentStep={step} />
 
-      {summaryItems.length > 0 && (
+      {summaryItems.length > 0 && step !== 7 && (
         <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">Seçim Özeti</p>
           <div className="space-y-1">
@@ -177,10 +178,13 @@ const CustomerPage = () => {
         </div>
       )}
 
-      <div className="p-6 flex-1">
+      <div className="p-6 flex-1 min-h-0 overflow-y-auto">
         {/* ADIM 1 — Hizmet Seçimi */}
         {step === 1 && (
           <div className="animate-fadeIn">
+            <button onClick={() => navigate('/book')} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
+              ← Geri
+            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Hizmet Seçin</h2>
             <div className="space-y-3">
               {shop.services.map(s => (
@@ -230,8 +234,6 @@ const CustomerPage = () => {
               <button
                 onClick={() => {
                   setSelectedDate(today);
-                  fetchAvailability(today);
-                  setStep(4);
                 }}
                 className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg border transition-colors ${selectedDate === today ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 dark:hover:border-zinc-500'}`}
               >
@@ -241,8 +243,6 @@ const CustomerPage = () => {
                 onClick={() => {
                   const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                   setSelectedDate(tomorrow);
-                  fetchAvailability(tomorrow);
-                  setStep(4);
                 }}
                 className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg border transition-colors ${selectedDate === new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 dark:hover:border-zinc-500'}`}
               >
@@ -257,10 +257,17 @@ const CustomerPage = () => {
               value={selectedDate}
               onChange={(e) => {
                 setSelectedDate(e.target.value);
-                fetchAvailability(e.target.value);
-                setStep(4);
               }}
             />
+            <Button
+              onClick={() => {
+                fetchAvailability(selectedDate);
+                setStep(4);
+              }}
+              className="mt-4"
+            >
+              İlerle
+            </Button>
           </div>
         )}
 
@@ -384,12 +391,50 @@ const CustomerPage = () => {
         {/* ADIM 7 — Onay / Başarı */}
         {step === 7 && (
           bookingCompleted ? (
-            <div className="text-center py-16 animate-fadeIn">
-              <div className="text-7xl mb-8">👊</div>
+            <div className="text-center py-8 animate-fadeIn">
+              <div className="text-7xl mb-6">👊</div>
               <h2 className="text-3xl font-black mb-4 uppercase tracking-tighter">İstek Gönderildi!</h2>
               <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500 leading-relaxed uppercase tracking-widest">
                 Berberiniz isteğinizi inceliyor.<br />Onay SMS ile gelecek.
               </p>
+              <div className="mt-6 rounded-2xl border-2 border-zinc-100 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-4 space-y-3 text-left">
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Dükkan</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{shop.name}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Hizmet</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedService?.name}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Berber</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedBarber?.full_name}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Tarih</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedDateLabel}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Saat</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedTimeRangeLabel}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Müşteri</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{contactInfo.fullName}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Telefon</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{formattedPhoneForDisplay}</span>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button
+                  onClick={() => navigate('/')}
+                  variant="outline"
+                >
+                  Ana Ekrana Dön
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="animate-fadeIn">
