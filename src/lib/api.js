@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -36,10 +37,7 @@ api.interceptors.response.use(
 
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) {
-      // refreshToken yoksa logout et
-      const { useAuthStore } = await import('../stores/authStore');
       useAuthStore.getState().logout();
-      window.location.href = '/login';
       return Promise.reject(error);
     }
 
@@ -59,7 +57,6 @@ api.interceptors.response.use(
       const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
       const { token, refreshToken: newRefreshToken } = res.data;
 
-      const { useAuthStore } = await import('../stores/authStore');
       useAuthStore.getState().setToken(token, newRefreshToken);
 
       processQueue(null, token);
@@ -67,9 +64,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      const { useAuthStore } = await import('../stores/authStore');
       useAuthStore.getState().logout();
-      window.location.href = '/login';
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
