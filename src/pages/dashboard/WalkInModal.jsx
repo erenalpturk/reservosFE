@@ -69,22 +69,22 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-t-3xl p-6 pb-10 shadow-2xl animate-fadeIn">
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl p-6 pb-10 shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black uppercase tracking-tight">Walk-In Ekle</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-900 font-black text-xl leading-none">✕</button>
+          <button onClick={onClose} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 font-black text-xl leading-none">✕</button>
         </div>
 
         <div className="space-y-4">
           {/* Personel seçimi (sadece sahip için) */}
           {currentUser.isOwner && (
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Personel</label>
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Personel</label>
               <select
                 value={form.staffId}
                 onChange={e => setForm({ ...form, staffId: e.target.value })}
-                className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
+                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
               >
                 <option value={currentUser.staffId}>{currentUser.fullName}</option>
                 {activeStaff.map(b => (
@@ -96,8 +96,8 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
           {/* Hizmet (çoklu seçim) */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1">
-              Hizmet <span className="normal-case font-normal text-zinc-300">(birden fazla seçilebilir)</span>
+            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 ml-1">
+              Hizmet <span className="normal-case font-normal text-zinc-300 dark:text-zinc-400">(birden fazla seçilebilir)</span>
             </label>
             <div className="space-y-2">
               {activeServices.map(s => {
@@ -107,21 +107,21 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
                     key={s.id}
                     type="button"
                     onClick={() => toggleService(s.id)}
-                    className={`w-full flex justify-between items-center p-3 rounded-xl border-2 transition-all text-left ${isSelected ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-100 bg-white text-zinc-900 hover:border-zinc-400'}`}
+                    className={`w-full flex justify-between items-center p-3 rounded-xl border-2 transition-all text-left ${isSelected ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
                   >
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-white bg-white' : 'border-zinc-300'}`}>
-                        {isSelected && <div className="w-2 h-2 rounded-sm bg-zinc-900" />}
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-white bg-white dark:border-zinc-900 dark:bg-zinc-900' : 'border-zinc-300 dark:border-zinc-600'}`}>
+                        {isSelected && <div className="w-2 h-2 rounded-sm bg-zinc-900 dark:bg-white" />}
                       </div>
                       <span className="font-bold text-sm">{s.name}</span>
                     </div>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isSelected ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-500'}`}>{s.duration_min} dk</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isSelected ? 'bg-zinc-700 text-white dark:bg-zinc-800 dark:text-zinc-100' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300'}`}>{s.duration_min} dk</span>
                   </button>
                 );
               })}
             </div>
             {selectedServiceIds.length > 1 && (
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2 ml-1">
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-2 ml-1">
                 Toplam: {totalDuration} dk
               </p>
             )}
@@ -129,15 +129,15 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
           {/* Başlangıç tarihi/saati */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Başlangıç</label>
+            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Başlangıç</label>
             <input
               type="datetime-local"
               value={form.startsAt}
               onChange={e => setForm({ ...form, startsAt: e.target.value })}
-              className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
+              className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
             />
             {selectedServiceIds.length > 0 && form.startsAt && computeEndsAt(form.startsAt) && (
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1 ml-1">
+              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-1 ml-1">
                 Bitiş: {new Date(computeEndsAt(form.startsAt)).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
               </p>
             )}
@@ -145,27 +145,27 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
           {/* Ad Soyad */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
+            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
             <input
               type="text"
               placeholder="Ahmet Yılmaz"
               value={form.fullName}
               onChange={e => setForm({ ...form, fullName: e.target.value })}
-              className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
+              className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
             />
           </div>
 
           {/* Telefon (opsiyonel) */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">
-              Telefon <span className="normal-case font-normal text-zinc-300">(opsiyonel)</span>
+            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
+              Telefon <span className="normal-case font-normal text-zinc-300 dark:text-zinc-400">(opsiyonel)</span>
             </label>
             <input
               type="tel"
               placeholder="05XXXXXXXXX"
               value={form.phone}
               onChange={e => setForm({ ...form, phone: e.target.value })}
-              className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
+              className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
             />
           </div>
 
