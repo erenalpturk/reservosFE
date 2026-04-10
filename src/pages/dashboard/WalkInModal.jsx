@@ -7,48 +7,50 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   const toast = useToast();
   const [form, setForm] = useState({
     staffId: currentUser.isOwner ? '' : currentUser.staffId,
-    serviceId:
-      shop.services.find(s => s.is_active !== false && s.name?.trim() === 'Saç Kesimi')?.id || '',
     startsAt: initialStartsAt || '',
     fullName: '',
     phone: '',
   });
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (form.serviceId) return;
-
+  const [selectedServiceIds, setSelectedServiceIds] = useState(() => {
     const defaultService = shop.services.find(
       s => s.is_active !== false && s.name?.trim() === 'Saç Kesimi'
     );
+    return defaultService ? [defaultService.id] : [];
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-    if (defaultService?.id) {
-      setForm(prev => ({ ...prev, serviceId: defaultService.id }));
-    }
-  }, [form.serviceId, shop.services]);
+  const activeServices = shop.services.filter(s => s.is_active !== false);
 
-  const selectedService = shop.services.find(s => s.id === form.serviceId);
+  const selectedServicesData = activeServices.filter(s => selectedServiceIds.includes(s.id));
+  const totalDuration = selectedServicesData.reduce(
+    (sum, s) => sum + (s.duration_min || 0) + (s.buffer_min || 0), 0
+  );
 
-  const computeEndsAt = (startsAt, service) => {
-    if (!startsAt || !service) return null;
+  const computeEndsAt = (startsAt) => {
+    if (!startsAt || totalDuration === 0) return null;
     const start = new Date(startsAt);
-    const durationMs = (service.duration_min + (service.buffer_min || 0)) * 60 * 1000;
-    return new Date(start.getTime() + durationMs).toISOString();
+    return new Date(start.getTime() + totalDuration * 60 * 1000).toISOString();
+  };
+
+  const toggleService = (id) => {
+    setSelectedServiceIds(prev =>
+      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    );
   };
 
   const handleSubmit = async () => {
-    if (!form.serviceId || !form.startsAt || !form.fullName) {
+    if (selectedServiceIds.length === 0 || !form.startsAt || !form.fullName) {
       toast('Hizmet, saat ve ad zorunludur.');
       return;
     }
-    const endsAt = computeEndsAt(form.startsAt, selectedService);
+    const endsAt = computeEndsAt(form.startsAt);
     if (!endsAt) return;
 
     setSubmitting(true);
     try {
       await api.post('/appointments/walk-in', {
         staffId: form.staffId || undefined,
-        serviceId: form.serviceId,
+        serviceIds: selectedServiceIds,
         startsAt: new Date(form.startsAt).toISOString(),
         endsAt,
         fullName: form.fullName,
@@ -64,7 +66,6 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   };
 
   const activeStaff = shop.staff.filter(b => b.is_active !== false);
-  const activeServices = shop.services.filter(s => s.is_active !== false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -93,19 +94,37 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
             </div>
           )}
 
-          {/* Hizmet */}
+          {/* Hizmet (çoklu seçim) */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 ml-1">Hizmet</label>
-            <select
-              value={form.serviceId}
-              onChange={e => setForm({ ...form, serviceId: e.target.value })}
-              className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
-            >
-              <option value="">{activeServices[0]?.name || 'Hizmet seçin'}</option>
-              {activeServices.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.duration_min} dk)</option>
-              ))}
-            </select>
+            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 ml-1">
+              Hizmet <span className="normal-case font-normal text-zinc-300">(birden fazla seçilebilir)</span>
+            </label>
+            <div className="space-y-2">
+              {activeServices.map(s => {
+                const isSelected = selectedServiceIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleService(s.id)}
+                    className={`w-full flex justify-between items-center p-3 rounded-xl border-2 transition-all text-left ${isSelected ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-100 bg-white text-zinc-900 hover:border-zinc-400'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-white bg-white' : 'border-zinc-300'}`}>
+                        {isSelected && <div className="w-2 h-2 rounded-sm bg-zinc-900" />}
+                      </div>
+                      <span className="font-bold text-sm">{s.name}</span>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isSelected ? 'bg-zinc-700 text-white' : 'bg-zinc-100 text-zinc-500'}`}>{s.duration_min} dk</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedServiceIds.length > 1 && (
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2 ml-1">
+                Toplam: {totalDuration} dk
+              </p>
+            )}
           </div>
 
           {/* Başlangıç tarihi/saati */}
@@ -117,9 +136,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
               onChange={e => setForm({ ...form, startsAt: e.target.value })}
               className="w-full p-4 border-2 border-zinc-100 rounded-2xl bg-white focus:border-zinc-900 focus:outline-none text-sm font-bold"
             />
-            {selectedService && form.startsAt && (
+            {selectedServiceIds.length > 0 && form.startsAt && computeEndsAt(form.startsAt) && (
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1 ml-1">
-                Bitiş: {new Date(computeEndsAt(form.startsAt, selectedService)).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                Bitiş: {new Date(computeEndsAt(form.startsAt)).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
               </p>
             )}
           </div>

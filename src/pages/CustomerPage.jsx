@@ -19,7 +19,7 @@ const CustomerPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]); // çoklu hizmet
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -50,11 +50,11 @@ const CustomerPage = () => {
   };
 
   const fetchAvailability = async (date) => {
-    if (!selectedService) return;
+    if (selectedServices.length === 0) return;
     setLoadingSlots(true);
     try {
       const response = await api.get('/availability', {
-        params: { shop: shopSlug, service: selectedService.id, date }
+        params: { shop: shopSlug, services: selectedServices.map(s => s.id).join(','), date }
       });
       setAvailability(response.data.availability);
     } catch (err) {
@@ -112,7 +112,7 @@ const CustomerPage = () => {
         fullName: contactInfo.fullName,
         businessId: shop.id,
         staffId: selectedStaff.id,
-        serviceId: selectedService.id,
+        serviceIds: selectedServices.map(s => s.id),
         startsAt: selectedSlot.startsAt,
         endsAt: selectedSlot.endsAt,
       };
@@ -147,8 +147,13 @@ const CustomerPage = () => {
   const formattedPhoneForDisplay = contactInfo.phone
     ? (contactInfo.phone.startsWith('+90') ? contactInfo.phone : `+90${contactInfo.phone.replace(/^0/, '')}`)
     : null;
+  const selectedServicesLabel = selectedServices.length > 0
+    ? selectedServices.map(s => s.name).join(', ')
+    : null;
+  const totalDurationMin = selectedServices.reduce((sum, s) => sum + (s.duration_min || 0) + (s.buffer_min || 0), 0);
+
   const summaryItems = [
-    { label: 'Hizmet', value: selectedService?.name || null },
+    { label: 'Hizmet', value: selectedServicesLabel },
     { label: 'Personel', value: selectedStaff?.full_name || null },
     { label: 'Tarih', value: selectedDateLabel },
     { label: 'Saat', value: selectedTimeLabel },
@@ -179,25 +184,49 @@ const CustomerPage = () => {
       )}
 
       <div className="p-6 flex-1 min-h-0 overflow-y-auto">
-        {/* ADIM 1 — Hizmet Seçimi */}
+        {/* ADIM 1 — Hizmet Seçimi (çoklu) */}
         {step === 1 && (
           <div className="animate-fadeIn">
             <button onClick={() => navigate('/book')} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
               ← Geri
             </button>
-            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Hizmet Seçin</h2>
+            <h2 className="text-xl font-black mb-2 uppercase tracking-tight">Hizmet Seçin</h2>
+            <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Birden fazla seçebilirsiniz</p>
             <div className="space-y-3">
-              {shop.services.map(s => (
-                <Card
-                  key={s.id}
-                  onClick={() => { setSelectedService(s); setStep(2); }}
-                  className="flex justify-between items-center"
-                >
-                  <span className="font-bold">{s.name}</span>
-                  <span className="text-xs font-bold px-2 py-1 bg-zinc-100 text-zinc-600 rounded-lg">{s.duration_min} dk</span>
-                </Card>
-              ))}
+              {shop.services.map(s => {
+                const isSelected = selectedServices.some(sel => sel.id === s.id);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedServices(prev =>
+                        isSelected ? prev.filter(sel => sel.id !== s.id) : [...prev, s]
+                      );
+                    }}
+                    className={`w-full flex justify-between items-center p-4 rounded-2xl border-2 transition-all text-left ${isSelected ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-white dark:border-zinc-900 bg-white dark:bg-zinc-900' : 'border-zinc-300 dark:border-zinc-600'}`}>
+                        {isSelected && <div className="w-2.5 h-2.5 rounded-sm bg-zinc-900 dark:bg-zinc-100" />}
+                      </div>
+                      <span className="font-bold text-sm">{s.name}</span>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-lg ${isSelected ? 'bg-zinc-700 dark:bg-zinc-300 text-white dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>{s.duration_min} dk</span>
+                  </button>
+                );
+              })}
             </div>
+            {selectedServices.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Toplam süre</span>
+                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200">{totalDurationMin} dk</span>
+                </div>
+                <Button onClick={() => setStep(2)}>
+                  Devam ({selectedServices.length} hizmet)
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -404,7 +433,7 @@ const CustomerPage = () => {
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Hizmet</span>
-                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedService?.name}</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedServicesLabel}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Personel</span>
@@ -451,7 +480,7 @@ const CustomerPage = () => {
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Hizmet</span>
-                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedService?.name}</span>
+                  <span className="text-sm font-bold text-zinc-700 dark:text-zinc-200 text-right">{selectedServicesLabel}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Personel</span>
