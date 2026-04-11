@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { DAY_NAMES, PX_PER_MIN, todayStr, toLocalDate, fmtTime, computeColumns, getApptPos } from './utils';
+import { DAY_NAMES, PX_PER_MIN, todayStr, toLocalDate, fmtTime, computeColumns, getApptPos, REDIRECT_TYPE_COLORS } from './utils';
 import { useNowLine } from './hooks/useNowLine';
 
 const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, startHour, endHour, highlightApptId, highlightTick }) => {
@@ -123,6 +123,10 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
                           borderLeft: `2px solid ${color}`,
                         }}
                       >
+                        {/* Yönlendirme türü göstergesi: sol üst köşede renkli nokta */}
+                        {appt.redirect_type && (
+                          <div className={`absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full ${REDIRECT_TYPE_COLORS[appt.redirect_type] || ''}`} />
+                        )}
                         <div className="px-0.5 pt-px">
                           <div className="text-[7px] font-black leading-tight truncate" style={{ color }}>
                             {fmtTime(appt.starts_at)}

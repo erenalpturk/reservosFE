@@ -37,6 +37,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [weekStart, setWeekStart] = useState(getMondayOf(todayStr()));
   const [appointments, setAppointments] = useState([]);
   const [allPendingAppointments, setAllPendingAppointments] = useState([]);
+  const [poolAppointments, setPoolAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [shop, setShop] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
@@ -79,6 +80,13 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     } catch (e) { console.error(e); }
   }, []);
 
+  const fetchPoolAppointments = useCallback(async () => {
+    try {
+      const r = await api.get('/appointments/pool');
+      setPoolAppointments(r.data.appointments || []);
+    } catch (e) { console.error(e); }
+  }, []);
+
   useEffect(() => { fetchShop(); }, []);
 
   useEffect(() => {
@@ -86,6 +94,12 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     const iv = setInterval(fetchAllPendingAppointments, 30000);
     return () => clearInterval(iv);
   }, [fetchAllPendingAppointments]);
+
+  useEffect(() => {
+    fetchPoolAppointments();
+    const iv = setInterval(fetchPoolAppointments, 30000);
+    return () => clearInterval(iv);
+  }, [fetchPoolAppointments]);
 
   useEffect(() => {
     if (tab !== 'program') return;
@@ -96,11 +110,17 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
   const handleAction = async (id, action) => {
     await api.patch(`/appointments/${id}/${action}`);
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments()]);
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
   const handleCancel = async (id) => {
     await api.delete(`/appointments/${id}`);
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments()]);
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+  };
+  const handleClaimed = async () => {
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+  };
+  const handleRedirected = async () => {
+    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
 
   const ensureNotificationPermission = async () => {
@@ -142,6 +162,9 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     : 21;
 
   const pendingCount = allPendingAppointments.length;
+  const poolCount = poolAppointments.length;
+  const attentionCount = pendingCount + poolCount;
+  const businessStaff = (shop?.staff || []).filter(s => s.is_active);
   const programSummary = [
     { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
     { label: 'Bekleyen', count: pendingCount, cls: 'text-orange-500' },
@@ -193,9 +216,9 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
               <h1 className="text-xl font-black uppercase tracking-tighter">
                 {tab === 'program' ? 'Program' : 'Ayarlar'}
               </h1>
-              {tab === 'program' && pendingCount > 0 && (
+              {tab === 'program' && attentionCount > 0 && (
                 <span className="px-1.5 py-0.5 bg-orange-400 text-white rounded-full text-[9px] font-black">
-                  {pendingCount}
+                  {attentionCount}
                 </span>
               )}
             </div>
@@ -214,9 +237,9 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 aria-label="Bekleyen randevu bildirimlerini aç"
               >
                 🔔
-                {pendingCount > 0 && (
+                {attentionCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-orange-400 text-white text-[9px] leading-4 font-black">
-                    {pendingCount}
+                    {attentionCount}
                   </span>
                 )}
               </button>
@@ -347,6 +370,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
       {showPendingModal && (
         <PendingAppointmentsModal
           appointments={allPendingAppointments}
+          poolAppointments={poolAppointments}
           user={user}
           onClose={() => setShowPendingModal(false)}
           onShowInCalendar={(appt, mode) => {
@@ -364,6 +388,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
             setShowPendingModal(false);
             setSelectedAppt(appt);
           }}
+          onClaimed={handleClaimed}
         />
       )}
 
@@ -371,9 +396,11 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
         <DetailModal
           appt={selectedAppt}
           user={user}
+          businessStaff={businessStaff}
           onClose={() => setSelectedAppt(null)}
           onAction={handleAction}
           onCancel={handleCancel}
+          onRedirected={handleRedirected}
         />
       )}
 

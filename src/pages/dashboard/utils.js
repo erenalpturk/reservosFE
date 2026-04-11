@@ -7,6 +7,7 @@ export const STATUS_LABELS = {
   expired: 'Süresi Doldu',
   completed: 'Tamamlandı',
   no_show: 'Gelmedi',
+  in_pool: 'Havuzda',
 };
 
 export const STATUS_DOT = {
@@ -18,6 +19,7 @@ export const STATUS_DOT = {
   cancelled_by_customer: 'bg-zinc-300',
   cancelled_by_shop: 'bg-zinc-300',
   expired: 'bg-zinc-300',
+  in_pool: 'bg-orange-400',
 };
 
 export const STATUS_COLORS = {
@@ -29,6 +31,15 @@ export const STATUS_COLORS = {
   expired: 'bg-zinc-100 text-zinc-400',
   completed: 'bg-blue-100 text-blue-600',
   no_show: 'bg-red-100 text-red-500',
+  in_pool: 'bg-orange-100 text-orange-600',
+};
+
+// Yönlendirme türüne göre renk (takvim kartı göstergesi için)
+// null = standart rezervasyon (mavi), pool = havuz (turuncu), direct = doğrudan (yeşil)
+export const REDIRECT_TYPE_COLORS = {
+  standard: 'bg-blue-500',
+  pool: 'bg-orange-500',
+  direct: 'bg-green-500',
 };
 
 export const DAY_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];

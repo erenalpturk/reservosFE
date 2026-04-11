@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { PX_PER_MIN, STATUS_DOT, fmtTime, computeColumns, getApptPos } from './utils';
+import { PX_PER_MIN, STATUS_DOT, REDIRECT_TYPE_COLORS, fmtTime, computeColumns, getApptPos } from './utils';
 import { useNowLine } from './hooks/useNowLine';
 
 const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour, endHour, highlightApptId, highlightTick }) => {
@@ -127,8 +127,11 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
                     </div>
                   )}
 
-                  <div className="flex-shrink-0 flex items-center">
+                  <div className="flex-shrink-0 flex flex-col items-center gap-1">
                     <div className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300 dark:bg-zinc-500'}`} />
+                    {appt.redirect_type && (
+                      <div className={`w-1.5 h-1.5 rounded-full ${REDIRECT_TYPE_COLORS[appt.redirect_type] || ''}`} />
+                    )}
                   </div>
                 </div>
               </button>
