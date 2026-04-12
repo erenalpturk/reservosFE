@@ -46,6 +46,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInStartsAt, setWalkInStartsAt] = useState(null);
+  const [expandGaps, setExpandGaps] = useState(false);
+  const [staffScope, setStaffScope] = useState('shop'); // 'shop' | 'personal'
   const [contentHeight, setContentHeight] = useState('auto');
   const { user, logout } = useAuthStore();
   const toast = useToast();
@@ -161,15 +163,20 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     ? Math.max(...shopHours.filter(h => !h.is_closed).map(h => parseInt(h.close_time, 10)))
     : 21;
 
+  const isOwner = user?.isOwner === true;
+  const scopedAppointments = (isOwner && staffScope === 'personal')
+    ? appointments.filter(a => a.staff?.id === user.staffId)
+    : appointments;
+
   const pendingCount = allPendingAppointments.length;
   const poolCount = poolAppointments.length;
   const attentionCount = pendingCount + poolCount;
   const businessStaff = (shop?.staff || []).filter(s => s.is_active);
   const programSummary = [
-    { label: 'Toplam', count: appointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
+    { label: 'Toplam', count: scopedAppointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
     { label: 'Bekleyen', count: pendingCount, cls: 'text-orange-500' },
-    { label: 'Onaylı', count: appointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
-    { label: 'Tamam', count: appointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
+    { label: 'Onaylı', count: scopedAppointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
+    { label: 'Tamam', count: scopedAppointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
   ];
   const summaryTitle = viewMode === 'day'
     ? toLocalDate(date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -244,6 +251,22 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 )}
               </button>
               <button
+                onClick={() => setTab(t => t === 'ayarlar' ? 'program' : 'ayarlar')}
+                type="button"
+                className={`h-8 w-8 inline-flex items-center justify-center border-2 rounded-xl transition-all ${
+                  tab === 'ayarlar'
+                    ? 'border-zinc-900 text-zinc-900 dark:border-zinc-200 dark:text-zinc-100'
+                    : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'
+                }`}
+                aria-label="Ayarlar"
+                title="Ayarlar"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+              <button
                 onClick={() => { logout(); navigate('/login'); }}
                 type="button"
                 className="h-8 w-8 inline-flex items-center justify-center border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-300 dark:hover:text-zinc-100 transition-all"
@@ -257,21 +280,6 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 </svg>
               </button>
             </div>
-          </div>
-
-          {/* ── Tab Bar ── */}
-          <div className="flex gap-1.5 px-5 pb-3">
-            {[['program', '📅 Program'], ['ayarlar', '⚙️ Ayarlar']].map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setTab(val)}
-                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  tab === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
           </div>
 
           {/* ── Kontrol satırı ── */}
@@ -292,6 +300,23 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                     </button>
                   ))}
                 </div>
+
+                {/* Kapsam toggle — sadece owner */}
+                {isOwner && (
+                  <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl overflow-hidden flex-shrink-0">
+                    {[['shop', 'Dükkan'], ['personal', 'Ben']].map(([val, label]) => (
+                      <button
+                        key={val}
+                        onClick={() => setStaffScope(val)}
+                        className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                          staffScope === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Tarih gezintisi */}
                 <div className="flex flex-1 min-w-0 items-center gap-1">
@@ -318,6 +343,23 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                   >›</button>
                 </div>
 
+                {/* Boşlukları genişlet (sadece gün görünümünde) */}
+                {viewMode === 'day' && (
+                  <button
+                    onClick={() => setExpandGaps(v => !v)}
+                    title={expandGaps ? 'Boşlukları daralt' : 'Boşlukları genişlet'}
+                    className={`h-[34px] w-[34px] inline-flex items-center justify-center border-2 rounded-xl transition-all flex-shrink-0 ${
+                      expandGaps
+                        ? 'border-zinc-900 text-zinc-900 dark:border-zinc-200 dark:text-zinc-100'
+                        : 'border-zinc-100 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-500 bg-white dark:bg-zinc-900'
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+                    </svg>
+                  </button>
+                )}
+
                 {/* Walk-in */}
                 <button
                   onClick={() => setShowWalkIn(true)}
@@ -334,8 +376,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
         {tab === 'program' ? (
           <div className="min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={appointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} startHour={startHour} endHour={endHour} highlightApptId={highlightApptId} highlightTick={highlightTick} />
-              : <WeekView weekDays={weekDays} appointments={appointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              ? <DayView appointments={scopedAppointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              : <WeekView weekDays={weekDays} appointments={scopedAppointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
           </div>
         ) : (

@@ -1,28 +1,76 @@
-import { useEffect, useRef } from 'react';
-import { PX_PER_MIN, STATUS_DOT, REDIRECT_TYPE_COLORS, fmtTime, computeColumns, getApptPos } from './utils';
-import { useNowLine } from './hooks/useNowLine';
+import { useRef, useEffect, useState } from 'react';
+import { STATUS_DOT, fmtTime } from './utils';
 
-const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour, endHour, highlightApptId, highlightTick }) => {
-  const totalHeight = (endHour - startHour) * 60 * PX_PER_MIN;
-  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
-  const nowTop = useNowLine(date, startHour, endHour);
+function fmtDuration(ms) {
+  const totalMin = Math.round(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0 && m > 0) return `${h}s ${m}dk`;
+  if (h > 0) return `${h}s`;
+  return `${m}dk`;
+}
+
+const GapBlock = ({ gapMs, gapStart, gapEnd, onCollapse, onTimeClick }) => {
+  const gapMin = gapMs / 60000;
+  const height = Math.min(160, Math.max(36, gapMin * 1.2));
+
+  return (
+    <button
+      onClick={onCollapse}
+      style={{ height: `${height}px` }}
+      className="w-full flex items-stretch rounded-lg border border-dashed border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 overflow-hidden text-left hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors group"
+    >
+      {/* Sol: saatler */}
+      <div className="flex flex-col items-end justify-center px-3 py-2.5 gap-0.5 flex-shrink-0 w-14">
+        <span className="text-[12px] font-bold text-zinc-400 dark:text-zinc-500 leading-none">{fmtTime(gapStart.toISOString())}</span>
+        <span className="text-[11px] font-semibold text-zinc-300 dark:text-zinc-600 leading-none">{fmtTime(gapEnd.toISOString())}</span>
+      </div>
+
+      {/* Dikey ayraç */}
+      <div className="w-px bg-zinc-200 dark:bg-zinc-700 my-2 flex-shrink-0" />
+
+      {/* Orta: boşluk bilgisi */}
+      <div className="flex-1 min-w-0 px-3 py-2.5 flex items-center">
+        <span className="text-[12px] font-bold text-zinc-300 dark:text-zinc-600">{fmtDuration(gapMs)} boş</span>
+      </div>
+
+      {/* Sağ: walk-in butonu */}
+      {onTimeClick && (
+        <div className="flex items-center px-3 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); onTimeClick(gapStart.toISOString()); }}
+            className="w-6 h-6 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center transition-colors"
+            title="Walk-in ekle"
+          >
+            <svg className="w-3 h-3 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </button>
+  );
+};
+
+const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGaps, highlightApptId, highlightTick }) => {
   const highlightRef = useRef(null);
+  const [expandedGaps, setExpandedGaps] = useState(new Set());
+
+  // expandGaps kapandığında bireysel açılımları da temizle
+  useEffect(() => {
+    if (!expandGaps) setExpandedGaps(new Set());
+  }, [expandGaps]);
+
+  const toggleGap = (i) => setExpandedGaps(prev => {
+    const next = new Set(prev);
+    next.has(i) ? next.delete(i) : next.add(i);
+    return next;
+  });
 
   useEffect(() => {
     if (!highlightRef.current) return;
-    highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [highlightApptId, highlightTick, appointments.length]);
-
-  const handleGridClick = (e) => {
-    if (!onTimeClick) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const totalMin = Math.floor(y / PX_PER_MIN / 15) * 15; // 15'er dakika snap
-    const h = Math.floor(totalMin / 60) + startHour;
-    const m = totalMin % 60;
-    const pad = (n) => String(n).padStart(2, '0');
-    onTimeClick(`${date}T${pad(h)}:${pad(m)}`);
-  };
 
   if (loading) return (
     <div className="flex justify-center py-12">
@@ -30,114 +78,101 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, startHour
     </div>
   );
 
-  const positioned = computeColumns(appointments);
+  const sorted = [...appointments].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+
+  if (sorted.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-2">
+      <div className="text-3xl">☕️</div>
+      <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Henüz randevu yok</p>
+    </div>
+  );
+
+  const now = Date.now();
+  const items = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const appt = sorted[i];
+    const isHighlighted = appt.id === highlightApptId;
+    const isPast = new Date(appt.ends_at).getTime() < now;
+    const color = appt.staff?.color_hex || '#71717a';
+    const durMs = new Date(appt.ends_at) - new Date(appt.starts_at);
+
+    items.push(
+      <button
+        key={isHighlighted ? `${appt.id}-${highlightTick}` : appt.id}
+        ref={isHighlighted ? highlightRef : null}
+        onClick={() => onSelect(appt)}
+        className={`w-full flex items-stretch gap-0 rounded-lg overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.99] bg-white dark:bg-zinc-800/60 ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1' : ''} ${isPast ? 'opacity-40' : ''}`}
+        style={{ borderLeft: `3px solid ${color}` }}
+      >
+        {/* Sol: saatler */}
+        <div className="flex flex-col items-end justify-center px-3 py-3 gap-0.5 flex-shrink-0 w-14">
+          <span className="text-[13px] font-black text-zinc-800 dark:text-zinc-100 leading-none">{fmtTime(appt.starts_at)}</span>
+          <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 leading-none">{fmtTime(appt.ends_at)}</span>
+        </div>
+
+        {/* Dikey ayraç */}
+        <div className="w-px bg-zinc-100 dark:bg-zinc-700 my-2 flex-shrink-0" />
+
+        {/* Sağ: isim + hizmet */}
+        <div className="flex-1 min-w-0 px-3 py-3 flex flex-col justify-center gap-0.5">
+          <span className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 leading-tight truncate">
+            {appt.phone_customers?.full_name || 'Walk-In'}
+          </span>
+          <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 truncate">
+            {appt.services?.name}{appt.services?.name ? ' · ' : ''}{fmtDuration(durMs)}
+          </span>
+        </div>
+
+        {/* Status dot */}
+        <div className="flex items-center px-3 flex-shrink-0">
+          <div className={`w-2 h-2 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300 dark:bg-zinc-500'}`} />
+        </div>
+      </button>
+    );
+
+    // Sonraki randevu ile boşluk var mı?
+    if (i < sorted.length - 1) {
+      const gapStart = new Date(appt.ends_at);
+      const gapEnd = new Date(sorted[i + 1].starts_at);
+      const gapMs = gapEnd - gapStart;
+
+      if (gapMs > 0) {
+        const isExpanded = expandGaps || expandedGaps.has(i);
+        if (isExpanded) {
+          items.push(
+            <GapBlock
+              key={`gap-${i}`}
+              gapMs={gapMs}
+              gapStart={gapStart}
+              gapEnd={gapEnd}
+              onCollapse={() => {
+                if (expandGaps) return; // toplu modda bireysel kapatma yok
+                toggleGap(i);
+              }}
+              onTimeClick={onTimeClick}
+            />
+          );
+        } else {
+          items.push(
+            <button
+              key={`gap-${i}`}
+              onClick={() => toggleGap(i)}
+              className="w-full flex items-center gap-2 px-2 py-1 group"
+            >
+              <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600 transition-colors" />
+              <span className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 whitespace-nowrap transition-colors">{fmtDuration(gapMs)} boş</span>
+              <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600 transition-colors" />
+            </button>
+          );
+        }
+      }
+    }
+  }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden rounded-xl">
-      <div className="flex" style={{ height: `${totalHeight}px`, position: 'relative' }}>
-
-        {/* Saat etiketleri */}
-        <div className="flex-shrink-0 relative" style={{ width: '36px' }}>
-          {hours.map(h => (
-            <div
-              key={h}
-              className="absolute text-[9px] font-bold text-zinc-300 dark:text-zinc-600 leading-none text-right pr-1.5"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN - 5}px`, width: '100%' }}
-            >
-              {h}:00
-            </div>
-          ))}
-        </div>
-
-        {/* Randevu kolonu */}
-        <div className="flex-1 relative" onClick={handleGridClick}>
-          {/* Saat çizgileri */}
-          {hours.map(h => (
-            <div
-              key={h}
-              className="absolute left-0 right-0 border-t border-zinc-100 dark:border-zinc-800"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN}px` }}
-            />
-          ))}
-          {/* Yarım saat çizgileri */}
-          {hours.map(h => (
-            <div
-              key={`${h}h`}
-              className="absolute left-0 right-0 border-t border-dashed border-zinc-50 dark:border-zinc-900"
-              style={{ top: `${(h - startHour) * 60 * PX_PER_MIN + 30 * PX_PER_MIN}px` }}
-            />
-          ))}
-
-          {/* Şu anki saat çizgisi */}
-          {nowTop !== null && (
-            <div
-              className="absolute left-0 right-0 z-10 pointer-events-none flex items-center"
-              style={{ top: `${nowTop}px` }}
-            >
-              <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 -ml-1" />
-              <div className="flex-1 h-px bg-red-500" />
-            </div>
-          )}
-
-          {appointments.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center flex-col gap-2 pointer-events-none">
-              <div className="text-3xl">☕️</div>
-              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Henüz randevu yok</p>
-            </div>
-          )}
-
-          {positioned.map(({ appt, col, totalCols }) => {
-            const { top, height } = getApptPos(appt, startHour);
-            const color = appt.staff?.color_hex || '#71717a';
-            const isHighlighted = appt.id === highlightApptId;
-            const GAP = 2;
-            const colW = `calc((100% - ${GAP * (totalCols + 1)}px) / ${totalCols})`;
-            const colL = `calc(${GAP}px + (${col} * (100% - ${GAP * (totalCols + 1)}px) / ${totalCols}) + ${col * GAP}px)`;
-            return (
-              <button
-                key={isHighlighted ? `${appt.id}-${highlightTick}` : appt.id}
-                ref={isHighlighted ? highlightRef : null}
-                onClick={(e) => { e.stopPropagation(); onSelect(appt); }}
-                className={`absolute rounded-l overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.98] flex items-stretch ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1 z-20' : ''}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${height}px`,
-                  left: colL,
-                  width: colW,
-                  backgroundColor: color + '18',
-                  borderLeft: `3px solid ${color}`,
-                }}
-              >
-                <div className="flex items-center gap-1.5 px-2 py-1 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    <div className="text-[10px] font-black text-zinc-700 dark:text-zinc-100 whitespace-nowrap">{fmtTime(appt.starts_at)}</div>
-                    {height > 28 && (
-                      <div className="text-[9px] font-bold text-zinc-300 dark:text-zinc-500 whitespace-nowrap">{fmtTime(appt.ends_at)}</div>
-                    )}
-                  </div>
-
-                  {height > 20 && totalCols < 3 && (
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-xs uppercase tracking-tight truncate leading-tight text-zinc-800 dark:text-zinc-100">
-                        {appt.phone_customers?.full_name || 'Walk-In'}
-                      </div>
-                      {height > 34 && (
-                        <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 truncate">{appt.services?.name}</div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex-shrink-0 flex flex-col items-center gap-1">
-                    <div className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[appt.status] || 'bg-zinc-300 dark:bg-zinc-500'}`} />
-                    {appt.redirect_type && (
-                      <div className={`w-1.5 h-1.5 rounded-full ${REDIRECT_TYPE_COLORS[appt.redirect_type] || ''}`} />
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+    <div className="h-full overflow-y-auto overflow-x-hidden">
+      <div className="flex flex-col gap-1 px-1 pb-1">
+        {items}
       </div>
     </div>
   );
