@@ -29,13 +29,6 @@ function chipDot(status) {
 
 const VISIBLE = 4;
 
-const LEGEND = [
-  { label: 'Onaylı',     cls: 'bg-green-500' },
-  { label: 'Bekleyen',   cls: 'bg-orange-400' },
-  { label: 'Tamamlandı', cls: 'bg-blue-400' },
-  { label: 'İptal',      cls: 'bg-red-400' },
-];
-
 /* ─── Gün kartı ──────────────────────────────────── */
 const DayCard = ({ day, appts, isToday, startHour, endHour, onDayClick, onSelect }) => {
   const [expanded, setExpanded] = useState(false);
@@ -71,19 +64,19 @@ const DayCard = ({ day, appts, isToday, startHour, endHour, onDayClick, onSelect
       >
         <div className="flex items-center gap-1.5">
           {isToday && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />}
-          <span className={`text-[13px] font-black ${isToday ? 'text-blue-500 dark:text-blue-400' : 'text-zinc-800 dark:text-zinc-100'}`}>
+          <span className={`text-[13px] font-medium ${isToday ? 'text-blue-500 dark:text-blue-400' : 'text-zinc-800 dark:text-zinc-100'}`}>
             {toLocalDate(day).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'short' })}
           </span>
         </div>
         {appts.length > 0 && (
-          <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 flex-shrink-0">
+          <span className="text-[11px] font-normal text-zinc-400 dark:text-zinc-500 flex-shrink-0">
             {appts.length} randevu
           </span>
         )}
       </button>
 
       {appts.length === 0 ? (
-        <p className="px-3 pb-3 text-[11px] font-bold text-zinc-300 dark:text-zinc-600">Randevu yok</p>
+        <p className="px-3 pb-3 text-[11px] font-normal text-zinc-300 dark:text-zinc-600">Randevu yok</p>
       ) : (
         <>
           {/* Yoğunluk barı */}
@@ -106,7 +99,7 @@ const DayCard = ({ day, appts, isToday, startHour, endHour, onDayClick, onSelect
                 className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-700/60 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
               >
                 <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${chipDot(appt.status)}`} />
-                <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+                <span className="text-[11px] font-normal text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
                   {fmtTime(appt.starts_at)} {(appt.phone_customers?.full_name || 'Walk-In').split(' ')[0]}
                 </span>
               </button>
@@ -117,7 +110,7 @@ const DayCard = ({ day, appts, isToday, startHour, endHour, onDayClick, onSelect
           {hidden > 0 && (
             <button
               onClick={() => setExpanded(v => !v)}
-              className="w-full px-3 pb-3 text-left text-[11px] font-bold text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              className="w-full px-3 pb-3 text-left text-[11px] font-normal text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
             >
               {expanded ? '‹ Daha az göster' : `+ ${hidden} randevu daha`}
             </button>
@@ -146,12 +139,7 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
   const pending   = appointments.filter(a => a.status === 'pending' || a.status === 'in_pool').length;
   const completed = appointments.filter(a => a.status === 'completed').length;
 
-  const stats = [
-    { label: 'Toplam',    value: total,     cls: 'text-zinc-800 dark:text-zinc-100' },
-    { label: 'Onaylı',    value: confirmed, cls: 'text-green-600 dark:text-green-400' },
-    { label: 'Bekleyen',  value: pending,   cls: 'text-orange-500' },
-    { label: 'Tamamlandı',value: completed, cls: 'text-blue-500' },
-  ];
+  
 
   if (loading) return (
     <div className="flex justify-center py-12">
@@ -162,27 +150,6 @@ const WeekView = ({ weekDays, appointments, loading, onSelect, onDayClick, start
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       <div className="flex flex-col gap-2 px-1 pb-2">
-
-        {/* Haftalık özet kartları */}
-        <div className="flex gap-2">
-          {stats.map(({ label, value, cls }) => (
-            <div key={label} className="flex-1 bg-white dark:bg-zinc-800/60 rounded-xl p-2.5 border border-zinc-100 dark:border-zinc-800 text-center">
-              <div className={`text-lg font-black leading-none ${cls}`}>{value}</div>
-              <div className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">{label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Efsane */}
-        <div className="flex items-center gap-3 px-1">
-          {LEGEND.map(({ label, cls }) => (
-            <div key={label} className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${cls}`} />
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">{label}</span>
-            </div>
-          ))}
-        </div>
-
         {/* Gün kartları */}
         {weekDays.map(day => (
           <DayCard
