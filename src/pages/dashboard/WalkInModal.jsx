@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import api from '../../lib/api';
 import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
@@ -68,9 +68,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   const activeStaff = shop.staff.filter(b => b.is_active !== false);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl p-6 pb-10 shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
+      <div className="relative w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl p-6 pb-[calc(env(safe-area-inset-bottom)+2rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black uppercase tracking-tight">Walk-In Ekle</h2>
           <button onClick={onClose} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 font-black text-xl leading-none">✕</button>
