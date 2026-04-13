@@ -7,21 +7,31 @@ import { useToast } from '../../components/Toast';
 const DetailModal = ({ appt, user, businessStaff, onClose, onAction, onCancel, onRedirected }) => {
   const [loading, setLoading] = useState(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
   const [showRedirectModal, setShowRedirectModal] = useState(false);
   const toast = useToast();
   const isPast = new Date(appt.starts_at) < new Date();
 
-  const doAction = async (action) => {
+  const doAction = async (action, reason) => {
     setLoading(action);
-    try { await onAction(appt.id, action); onClose(); }
+    try { await onAction(appt.id, action, reason); onClose(); }
     catch { toast('İşlem başarısız.'); setLoading(null); }
   };
 
   const doCancel = async () => {
     setLoading('cancel');
     setShowCancelConfirm(false);
-    try { await onCancel(appt.id); onClose(); }
+    try { await onCancel(appt.id, cancelReason); onClose(); }
     catch { toast('İptal başarısız.'); setLoading(null); }
+  };
+
+  const doReject = async () => {
+    setLoading('reject');
+    setShowRejectConfirm(false);
+    try { await onAction(appt.id, 'reject', rejectReason); onClose(); }
+    catch { toast('İşlem başarısız.'); setLoading(null); }
   };
 
   const handleRedirected = () => {
@@ -95,17 +105,42 @@ const DetailModal = ({ appt, user, businessStaff, onClose, onAction, onCancel, o
           {/* Aksiyonlar */}
           {appt.status === 'pending' && (
             <div className="space-y-2">
-              <div className="flex gap-2">
-                <Button variant="primary" loading={loading === 'confirm'} onClick={() => doAction('confirm')}>Onayla</Button>
-                <Button variant="secondary" loading={loading === 'reject'} onClick={() => doAction('reject')}>Reddet</Button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRedirectModal(true)}
-                className="w-full py-2.5 rounded-2xl border-2 border-zinc-200 text-zinc-600 text-[11px] font-black uppercase tracking-widest hover:border-zinc-400 hover:text-zinc-900 transition-all"
-              >
-                ↪ Yönlendir
-              </button>
+              {showRejectConfirm ? (
+                <div className="space-y-2">
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700 uppercase tracking-widest">
+                    Randevuyu reddetmek istediğinize emin misiniz?
+                  </div>
+                  <textarea
+                    value={rejectReason}
+                    onChange={e => setRejectReason(e.target.value)}
+                    placeholder="Red sebebi (opsiyonel)"
+                    rows={2}
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 placeholder-zinc-400 resize-none focus:outline-none focus:border-zinc-400 transition-colors"
+                  />
+                  <div className="flex gap-2">
+                    <Button variant="secondary" disabled={loading === 'reject'} onClick={() => { setShowRejectConfirm(false); setRejectReason(''); }}>
+                      Vazgeç
+                    </Button>
+                    <Button variant="danger" loading={loading === 'reject'} onClick={doReject}>
+                      Evet, Reddet
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="primary" loading={loading === 'confirm'} onClick={() => doAction('confirm')}>Onayla</Button>
+                  <Button variant="secondary" loading={loading === 'reject'} onClick={() => setShowRejectConfirm(true)}>Reddet</Button>
+                </div>
+              )}
+              {!showRejectConfirm && (
+                <button
+                  type="button"
+                  onClick={() => setShowRedirectModal(true)}
+                  className="w-full py-2.5 rounded-2xl border-2 border-zinc-200 text-zinc-600 text-[11px] font-black uppercase tracking-widest hover:border-zinc-400 hover:text-zinc-900 transition-all"
+                >
+                  ↪ Yönlendir
+                </button>
+              )}
             </div>
           )}
           {appt.status === 'confirmed' && !isPast && (
@@ -114,8 +149,15 @@ const DetailModal = ({ appt, user, businessStaff, onClose, onAction, onCancel, o
                 <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700 uppercase tracking-widest">
                   Randevuyu iptal etmek istediğinize emin misiniz?
                 </div>
+                <textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="İptal sebebi (opsiyonel)"
+                  rows={2}
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 placeholder-zinc-400 resize-none focus:outline-none focus:border-zinc-400 transition-colors"
+                />
                 <div className="flex gap-2">
-                  <Button variant="secondary" disabled={loading === 'cancel'} onClick={() => setShowCancelConfirm(false)}>
+                  <Button variant="secondary" disabled={loading === 'cancel'} onClick={() => { setShowCancelConfirm(false); setCancelReason(''); }}>
                     Vazgeç
                   </Button>
                   <Button variant="danger" loading={loading === 'cancel'} onClick={doCancel}>

@@ -113,12 +113,13 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     return () => clearInterval(iv);
   }, [tab, fetchAppointments]);
 
-  const handleAction = async (id, action) => {
-    await api.patch(`/appointments/${id}/${action}`);
+  const handleAction = async (id, action, reason) => {
+    const body = (action === 'reject' && reason) ? { reason } : undefined;
+    await api.patch(`/appointments/${id}/${action}`, body);
     await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
-  const handleCancel = async (id) => {
-    await api.delete(`/appointments/${id}`);
+  const handleCancel = async (id, reason) => {
+    await api.delete(`/appointments/${id}`, reason ? { data: { reason } } : undefined);
     await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
   const handleClaimed = async () => {
