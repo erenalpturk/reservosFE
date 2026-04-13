@@ -14,9 +14,9 @@ export default defineConfig({
         skipWaiting: true,
       },
       manifest: {
-        name: 'BarberApp',
-        short_name: 'BarberApp',
-        description: 'Berber randevu uygulaması',
+        name: 'Reservos',
+        short_name: 'Reservos',
+        description: 'Randevu yönetim uygulaması',
         theme_color: '#18181b',
         background_color: '#18181b',
         display: 'standalone',
