@@ -79,9 +79,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
   const fetchAllPendingAppointments = useCallback(async () => {
     try {
-      const r = await api.get('/appointments');
-      const pending = (r.data.appointments || []).filter(a => a.status === 'pending');
-      setAllPendingAppointments(pending);
+      const r = await api.get('/appointments', { params: { status: 'pending' } });
+      setAllPendingAppointments(r.data.appointments || []);
     } catch (e) { console.error(e); }
   }, []);
 
@@ -142,7 +141,6 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
         platform: 'web',
       });
       localStorage.setItem(REGISTERED_TOKEN_KEY, result.token);
-      toast('Bildirimler etkinlestirildi.', 'success');
     } catch (err) {
       console.error('FCM manuel kayit hatasi:', err.message);
     }
