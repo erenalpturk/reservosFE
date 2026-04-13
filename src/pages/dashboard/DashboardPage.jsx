@@ -406,7 +406,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
                 <button
                   onClick={() => setShowWalkIn(true)}
-                  className="h-[38px] px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
+                  className="h-[38px] px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
                 >
                   Walk-in
                 </button>
@@ -414,7 +414,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
               <div className="flex items-center gap-2 overflow-x-auto">
                 {/* Gün/Hafta toggle */}
-                <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl overflow-hidden flex-shrink-0">
+                <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-md overflow-hidden flex-shrink-0">
                   {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
                     <button
                       key={val}
@@ -430,7 +430,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
                 {/* Kapsam toggle — sadece owner */}
                 {isOwner && (
-                  <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl overflow-hidden flex-shrink-0">
+                  <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-md overflow-hidden flex-shrink-0">
                     {[['shop', 'Dükkan'], ['personal', 'Ben']].map(([val, label]) => (
                       <button
                         key={val}
