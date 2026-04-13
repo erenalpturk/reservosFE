@@ -163,6 +163,14 @@ const CustomerPage = () => {
   return (
     <div className="max-w-md mx-auto bg-white dark:bg-zinc-900 h-dvh overflow-hidden shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="bg-zinc-900 text-white p-8">
+        {!(step === 7 && bookingCompleted) && (
+          <button
+            onClick={step === 1 ? () => navigate('/book') : goBack}
+            className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1 hover:text-zinc-200 transition-colors"
+          >
+            ← Geri
+          </button>
+        )}
         <h1 className="text-2xl font-black uppercase tracking-tighter italic">{shop.name}</h1>
         <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mt-1">{shop.address}</p>
       </div>
@@ -187,9 +195,6 @@ const CustomerPage = () => {
         {/* ADIM 1 — Hizmet Seçimi (çoklu) */}
         {step === 1 && (
           <div className="animate-fadeIn">
-            <button onClick={() => navigate('/book')} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-2 uppercase tracking-tight">Hizmet Seçin</h2>
             <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Birden fazla seçebilirsiniz</p>
             <div className="space-y-3">
@@ -233,9 +238,6 @@ const CustomerPage = () => {
         {/* ADIM 2 — Personel Seçimi */}
         {step === 2 && (
           <div className="animate-fadeIn">
-            <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Personel Seçin</h2>
             <div className="space-y-3">
               {shop.staff.map(b => (
@@ -255,9 +257,6 @@ const CustomerPage = () => {
         {/* ADIM 3 — Tarih Seçimi */}
         {step === 3 && (
           <div className="animate-fadeIn">
-            <button onClick={goBack} className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Tarih Seçin</h2>
             <div className="flex gap-2 mb-4">
               <button
@@ -303,9 +302,6 @@ const CustomerPage = () => {
         {/* ADIM 4 — Saat Seçimi */}
         {step === 4 && (
           <div className="animate-fadeIn">
-            <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">{selectedDate} — Saat</h2>
             {loadingSlots ? (
               <div className="flex justify-center py-12">
@@ -343,9 +339,6 @@ const CustomerPage = () => {
         {/* ADIM 5 — İletişim */}
         {step === 5 && (
           <div className="animate-fadeIn">
-            <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">İletişim</h2>
             <div className="mb-4">
               <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Telefon</label>
@@ -384,9 +377,6 @@ const CustomerPage = () => {
         {/* ADIM 6 — OTP Doğrulama */}
         {step === 6 && (
           <div className="animate-fadeIn">
-            <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-              ← Geri
-            </button>
             <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Doğrulama</h2>
             <div className="mb-4 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-widest">
               Test OTP: {sentOtp}
@@ -467,9 +457,6 @@ const CustomerPage = () => {
             </div>
           ) : (
             <div className="animate-fadeIn">
-              <button onClick={goBack} className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-                ← Geri
-              </button>
               <h2 className="text-xl font-black mb-4 uppercase tracking-tight">Randevu Onayı</h2>
               <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Lütfen tüm detayları kontrol edin.</p>
 
