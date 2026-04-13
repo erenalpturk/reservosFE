@@ -1,30 +1,12 @@
 import { useState } from 'react';
-import { DAY_NAMES, todayStr, toLocalDate, fmtTime } from './utils';
-
-const CANCELLED = new Set(['cancelled_by_customer', 'cancelled_by_shop', 'rejected', 'expired', 'no_show']);
-
-const BAR_COLOR = {
-  confirmed: '#22c55e',
-  pending: '#fb923c',
-  in_pool: '#fb923c',
-  completed: '#60a5fa',
-};
+import { DAY_NAMES, todayStr, toLocalDate, fmtTime, STATUS_DOT, STATUS_HEX } from './utils';
 
 function barColor(status) {
-  if (CANCELLED.has(status)) return '#f87171';
-  return BAR_COLOR[status] || '#a1a1aa';
+  return STATUS_HEX[status] || '#d4d4d8';
 }
 
-const CHIP_DOT = {
-  confirmed: 'bg-green-500',
-  pending: 'bg-orange-400',
-  in_pool: 'bg-orange-400',
-  completed: 'bg-blue-400',
-};
-
 function chipDot(status) {
-  if (CANCELLED.has(status)) return 'bg-red-400';
-  return CHIP_DOT[status] || 'bg-zinc-300';
+  return STATUS_DOT[status] || 'bg-zinc-300';
 }
 
 const VISIBLE = 4;

@@ -10,6 +10,11 @@ function fmtDuration(ms) {
   return `${m}dk`;
 }
 
+function toDateTimeLocalValue(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 const GapBlock = ({ gapMs, gapStart, gapEnd, onCollapse, onTimeClick }) => {
   const gapMin = gapMs / 60000;
   const height = Math.min(160, Math.max(36, gapMin * 1.2));
@@ -38,7 +43,7 @@ const GapBlock = ({ gapMs, gapStart, gapEnd, onCollapse, onTimeClick }) => {
       {onTimeClick && (
         <div className="flex items-center px-3 flex-shrink-0">
           <button
-            onClick={(e) => { e.stopPropagation(); onTimeClick(gapStart.toISOString()); }}
+            onClick={(e) => { e.stopPropagation(); onTimeClick(toDateTimeLocalValue(gapStart)); }}
             className="w-6 h-6 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center transition-colors"
             title="Walk-in ekle"
           >

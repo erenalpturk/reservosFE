@@ -22,6 +22,18 @@ export const STATUS_DOT = {
   in_pool: 'bg-orange-400',
 };
 
+export const STATUS_HEX = {
+  pending: '#fb923c',
+  confirmed: '#4ade80',
+  completed: '#60a5fa',
+  no_show: '#f87171',
+  rejected: '#d4d4d8',
+  cancelled_by_customer: '#d4d4d8',
+  cancelled_by_shop: '#d4d4d8',
+  expired: '#d4d4d8',
+  in_pool: '#fb923c',
+};
+
 export const STATUS_COLORS = {
   pending: 'bg-orange-100 text-orange-600',
   confirmed: 'bg-green-100 text-green-600',
