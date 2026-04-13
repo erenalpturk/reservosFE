@@ -46,6 +46,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInStartsAt, setWalkInStartsAt] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [expandGaps, setExpandGaps] = useState(false);
   const [staffScope, setStaffScope] = useState('shop'); // 'shop' | 'personal'
   const [contentHeight, setContentHeight] = useState('auto');
@@ -54,6 +55,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const navigate = useNavigate();
   const topFixedRef = useRef(null);
   const bottomFixedRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const dayPickerRef = useRef(null);
 
   const weekDays = getWeekDays(weekStart);
 
@@ -181,6 +184,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const summaryTitle = viewMode === 'day'
     ? toLocalDate(date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
     : `${toLocalDate(weekDays[0]).getDate()}-${toLocalDate(weekDays[6]).getDate()} ${toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}`;
+  const dayDate = toLocalDate(date);
+  const dayLabel = `${dayDate.getDate()} ${dayDate.toLocaleDateString('tr-TR', { month: 'long' })}, ${dayDate.toLocaleDateString('tr-TR', { weekday: 'long' })}`;
 
   useLayoutEffect(() => {
     const updateContentHeight = () => {
@@ -211,15 +216,49 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     return () => clearTimeout(to);
   }, [highlightApptId, highlightTick]);
 
+  useEffect(() => {
+    if (!showProfileMenu) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') setShowProfileMenu(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showProfileMenu]);
+
   return (
     <div className="bg-zinc-50 dark:bg-zinc-950 h-dvh w-full overflow-hidden text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
         <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
-          {/* ── Header ── */}
+          {/* ── Satır 1: Başlık + Aksiyonlar ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3 gap-2">
             <div className="flex items-center gap-2 min-w-0">
+              {tab === 'ayarlar' && (
+                <button
+                  type="button"
+                  onClick={() => setTab('program')}
+                  className="h-9 w-9 inline-flex items-center justify-center rounded-xl text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                  aria-label="Programa dön"
+                  title="Programa dön"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+              )}
               <h1 className="text-xl font-black uppercase tracking-tighter">
                 {tab === 'program' ? 'Program' : 'Ayarlar'}
               </h1>
@@ -230,17 +269,14 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {onToggleTheme && (
-                <ThemeToggle isDark={!!isDark} onToggle={onToggleTheme} />
-              )}
+            <div className="relative flex items-center gap-2 flex-shrink-0" ref={profileMenuRef}>
               <button
                 type="button"
                 onClick={() => {
                   ensureNotificationPermission();
                   setShowPendingModal(true);
                 }}
-                className="relative h-8 w-8 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all"
+                className="relative h-10 w-10 border-2 border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm text-zinc-500 dark:text-zinc-400 hover:border-orange-300 hover:text-orange-500 transition-all"
                 aria-label="Bekleyen randevu bildirimlerini aç"
               >
                 🔔
@@ -251,48 +287,139 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 )}
               </button>
               <button
-                onClick={() => setTab(t => t === 'ayarlar' ? 'program' : 'ayarlar')}
                 type="button"
-                className={`h-8 w-8 inline-flex items-center justify-center border-2 rounded-xl transition-all ${
-                  tab === 'ayarlar'
-                    ? 'border-zinc-900 text-zinc-900 dark:border-zinc-200 dark:text-zinc-100'
-                    : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500'
-                }`}
-                aria-label="Ayarlar"
-                title="Ayarlar"
+                onClick={() => setShowProfileMenu(v => !v)}
+                className="h-10 w-10 inline-flex items-center justify-center border-2 border-zinc-200 dark:border-zinc-700 rounded-2xl text-zinc-500 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all"
+                aria-label="Profil menüsü"
+                aria-expanded={showProfileMenu}
+                title="Profil menüsü"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  <circle cx="12" cy="8" r="3" />
+                  <path d="M5 20a7 7 0 0 1 14 0" />
                 </svg>
               </button>
-              <button
-                onClick={() => { logout(); navigate('/login'); }}
-                type="button"
-                className="h-8 w-8 inline-flex items-center justify-center border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-300 dark:hover:text-zinc-100 transition-all"
-                aria-label="Çıkış yap"
-                title="Çıkış"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <path d="M16 17l5-5-5-5" />
-                  <path d="M21 12H9" />
-                </svg>
-              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 top-12 z-20 w-56 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab(t => (t === 'program' ? 'ayarlar' : 'program'));
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    {tab === 'program' ? 'Settings' : 'Program'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      logout();
+                      navigate('/login');
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Logout
+                  </button>
+                  <div className="flex items-center justify-between mt-1 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/80">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-300">Theme</span>
+                    {onToggleTheme
+                      ? <ThemeToggle isDark={!!isDark} onToggle={onToggleTheme} />
+                      : <span className="text-xs text-zinc-400">N/A</span>
+                    }
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* ── Kontrol satırı ── */}
+          {/* ── Satır 2 + 3: Kontrol alanı ── */}
           {tab === 'program' && (
-            <div className="px-5 pb-3">
-              <div className="flex items-center gap-1.5">
+            <div className="px-5 pb-4 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-1 min-w-0 items-center gap-1.5">
+                  <button
+                    onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
+                    className="h-[38px] px-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 font-black text-2xl leading-none transition-colors"
+                    aria-label={viewMode === 'day' ? 'Önceki gün' : 'Önceki hafta'}
+                  >‹</button>
+                  {viewMode === 'day' ? (
+                    <>
+                      <input
+                        ref={dayPickerRef}
+                        type="date"
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        className="absolute h-0 w-0 opacity-0 pointer-events-none"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!dayPickerRef.current) return;
+                          if (typeof dayPickerRef.current.showPicker === 'function') {
+                            dayPickerRef.current.showPicker();
+                            return;
+                          }
+                          dayPickerRef.current.focus();
+                          dayPickerRef.current.click();
+                        }}
+                        className="flex-1 min-w-0 h-[38px] text-center text-[15px] font-extrabold tracking-tight text-zinc-800 dark:text-zinc-100 truncate"
+                        aria-label="Tarih seç"
+                        title="Tarih seç"
+                      >
+                        {dayLabel}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex-1 min-w-0 h-[38px] py-2 px-2 text-[14px] font-extrabold tracking-tight text-zinc-700 dark:text-zinc-200 text-center truncate">
+                      {toLocalDate(weekDays[0]).getDate()}–{toLocalDate(weekDays[6]).getDate()}{' '}
+                      {toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => viewMode === 'day' ? shiftDay(1) : shiftWeek(1)}
+                    className="h-[38px] px-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 font-black text-2xl leading-none transition-colors"
+                    aria-label={viewMode === 'day' ? 'Sonraki gün' : 'Sonraki hafta'}
+                  >›</button>
+
+                  {/* Boşlukları genişlet (sadece gün görünümünde) */}
+                  {viewMode === 'day' && (
+                    <button
+                      onClick={() => setExpandGaps(v => !v)}
+                      title={expandGaps ? 'Boşlukları daralt' : 'Boşlukları genişlet'}
+                      className={`h-[38px] w-[38px] inline-flex items-center justify-center border-2 rounded-xl transition-all flex-shrink-0 ${
+                        expandGaps
+                          ? 'border-zinc-900 text-zinc-900 dark:border-zinc-200 dark:text-zinc-100'
+                          : 'border-zinc-100 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-500 bg-white dark:bg-zinc-900'
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowWalkIn(true)}
+                  className="h-[38px] px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
+                >
+                  Walk-in
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto">
                 {/* Gün/Hafta toggle */}
                 <div className="flex bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl overflow-hidden flex-shrink-0">
                   {[['day', 'Gün'], ['week', 'Hafta']].map(([val, label]) => (
                     <button
                       key={val}
                       onClick={() => setViewMode(val)}
-                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
                         viewMode === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200'
                       }`}
                     >
@@ -308,7 +435,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                       <button
                         key={val}
                         onClick={() => setStaffScope(val)}
-                        className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
                           staffScope === val ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200'
                         }`}
                       >
@@ -317,56 +444,6 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                     ))}
                   </div>
                 )}
-
-                {/* Tarih gezintisi */}
-                <div className="flex flex-1 min-w-0 items-center gap-1">
-                  <button
-                    onClick={() => viewMode === 'day' ? shiftDay(-1) : shiftWeek(-1)}
-                    className="px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-500 font-black text-sm transition-all"
-                  >‹</button>
-                  {viewMode === 'day' ? (
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={e => setDate(e.target.value)}
-                      className="flex-1 min-w-0 w-0 py-2 px-2 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-[10px] font-bold focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none bg-white dark:bg-zinc-900 text-center uppercase"
-                    />
-                  ) : (
-                    <div className="flex-1 min-w-0 py-2 px-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-[10px] font-black text-zinc-600 dark:text-zinc-300 text-center uppercase tracking-widest truncate">
-                      {toLocalDate(weekDays[0]).getDate()}–{toLocalDate(weekDays[6]).getDate()}{' '}
-                      {toLocalDate(weekDays[6]).toLocaleDateString('tr-TR', { month: 'short' })}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => viewMode === 'day' ? shiftDay(1) : shiftWeek(1)}
-                    className="px-2.5 py-2 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-500 font-black text-sm transition-all"
-                  >›</button>
-                </div>
-
-                {/* Boşlukları genişlet (sadece gün görünümünde) */}
-                {viewMode === 'day' && (
-                  <button
-                    onClick={() => setExpandGaps(v => !v)}
-                    title={expandGaps ? 'Boşlukları daralt' : 'Boşlukları genişlet'}
-                    className={`h-[34px] w-[34px] inline-flex items-center justify-center border-2 rounded-xl transition-all flex-shrink-0 ${
-                      expandGaps
-                        ? 'border-zinc-900 text-zinc-900 dark:border-zinc-200 dark:text-zinc-100'
-                        : 'border-zinc-100 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-500 bg-white dark:bg-zinc-900'
-                    }`}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-                    </svg>
-                  </button>
-                )}
-
-                {/* Walk-in */}
-                <button
-                  onClick={() => setShowWalkIn(true)}
-                  className="px-3 py-2 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
-                >
-                  +
-                </button>
               </div>
             </div>
           )}

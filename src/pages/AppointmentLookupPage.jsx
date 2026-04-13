@@ -133,12 +133,12 @@ const AppointmentLookupPage = () => {
             onChange={(e) => setPhone(e.target.value)}
           />
           <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-1">
-            Son randevularinizi gormek icin rezervasyonda kullandiginiz numarayi girin.
+            Son randevularınızı görmek icin rezervasyonda kullandığınız numarayı girin.
           </p>
         </div>
 
         <Button onClick={handleSearch} loading={loading}>
-          Randevulari Sorgula
+          Randevuları Sorgula
         </Button>
 
         {error && (

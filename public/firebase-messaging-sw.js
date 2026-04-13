@@ -26,7 +26,7 @@ if (hasRequiredConfig(config)) {
 
   var messaging = firebase.messaging();
   messaging.onBackgroundMessage(function (payload) {
-    var notificationTitle = (payload.notification && payload.notification.title) || 'ReservApp';
+    var notificationTitle = (payload.notification && payload.notification.title) || 'ReservOS';
     var notificationBody = (payload.notification && payload.notification.body) || 'Yeni bildirim var.';
 
     self.registration.showNotification(notificationTitle, {
