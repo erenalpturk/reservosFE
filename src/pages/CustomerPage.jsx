@@ -54,7 +54,12 @@ const CustomerPage = () => {
     setLoadingSlots(true);
     try {
       const response = await api.get('/availability', {
-        params: { shop: shopSlug, services: selectedServices.map(s => s.id).join(','), date }
+        params: {
+          shop: shopSlug,
+          services: selectedServices.map(s => s.id).join(','),
+          date,
+          includeUnavailable: true,
+        }
       });
       setAvailability(response.data.availability);
     } catch (err) {
@@ -331,15 +336,29 @@ const selectedTimeRangeLabel = selectedSlot
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {currentStaffSlots.map((slot, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setSelectedSlot(slot); setStep(5); console.log('Seçilen slot:', slot); }}
-                    className="p-3 text-center border-2 border-zinc-50 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 font-bold text-xs hover:border-zinc-900 dark:hover:border-zinc-500 transition-all"
-                  >
-                    {new Date(slot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                  </button>
-                ))}
+                {currentStaffSlots.map((slot, i) => {
+                  const isAvailable = slot.available !== false;
+
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={!isAvailable}
+                      onClick={() => {
+                        if (!isAvailable) return;
+                        setSelectedSlot(slot);
+                        setStep(5);
+                      }}
+                      className={`p-3 text-center border-2 rounded-2xl font-bold text-xs transition-all ${
+                        isAvailable
+                          ? 'border-zinc-50 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-900 dark:hover:border-zinc-500'
+                          : 'border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-600 opacity-45 cursor-not-allowed'
+                      }`}
+                    >
+                      {new Date(slot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

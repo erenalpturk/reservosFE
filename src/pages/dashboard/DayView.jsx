@@ -115,8 +115,8 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGap
       <button
         key={isHighlighted ? `${appt.id}-${highlightTick}` : appt.id}
         ref={isHighlighted ? highlightRef : null}
-        onClick={() => onSelect(appt)}
-        className={`w-full flex items-stretch gap-0 rounded-lg overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.99] bg-white dark:bg-zinc-800/60 ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1' : ''} ${isPast ? 'opacity-40' : ''}`}
+        onClick={() => console.log('Selected appointment:', appt) || onSelect(appt)}
+        className={`w-full flex items-stretch gap-0 rounded-lg overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.99] bg-white dark:bg-zinc-800/60 ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1' : ''} ${isPast ? 'opacity-40' : ''} ${appt.status == 'completed' || appt.status == 'expired' ? 'opacity-40' : ''} `}
         style={{ borderLeft: `3px solid ${color}` }}
       >
         {/* Sol: saatler */}
