@@ -133,6 +133,7 @@ const CustomerPage = () => {
     </div>
   );
   if (error) return <div className="p-20 text-red-500 text-center font-bold">{error}</div>;
+  const totalDurationMin = selectedServices.reduce((sum, s) => sum + (s.duration_min || 0), 0);
 
   const currentStaffSlots = availability.find(a => a.staff.id === selectedStaff?.id)?.slots || [];
   const selectedDateLabel = selectedDate
@@ -141,8 +142,17 @@ const CustomerPage = () => {
   const selectedTimeLabel = selectedSlot
     ? new Date(selectedSlot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
     : null;
-  const selectedTimeRangeLabel = selectedSlot
-    ? `${new Date(selectedSlot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} - ${new Date(selectedSlot.endsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`
+const selectedTimeRangeLabel = selectedSlot
+    ? (() => {
+        const start = new Date(selectedSlot.startsAt).getTime();
+        const end = new Date(start + totalDurationMin * 60 * 1000);
+        
+        const formatOptions = { hour: '2-digit', minute: '2-digit' };
+        const startTime = new Date(start).toLocaleTimeString('tr-TR', formatOptions);
+        const endTime = end.toLocaleTimeString('tr-TR', formatOptions);
+
+        return `${startTime} - ${endTime}`;
+      })()
     : null;
   const formattedPhoneForDisplay = contactInfo.phone
     ? (contactInfo.phone.startsWith('+90') ? contactInfo.phone : `+90${contactInfo.phone.replace(/^0/, '')}`)
@@ -150,7 +160,6 @@ const CustomerPage = () => {
   const selectedServicesLabel = selectedServices.length > 0
     ? selectedServices.map(s => s.name).join(', ')
     : null;
-  const totalDurationMin = selectedServices.reduce((sum, s) => sum + (s.duration_min || 0) + (s.buffer_min || 0), 0);
 
   const summaryItems = [
     { label: 'Hizmet', value: selectedServicesLabel },
@@ -325,7 +334,7 @@ const CustomerPage = () => {
                 {currentStaffSlots.map((slot, i) => (
                   <button
                     key={i}
-                    onClick={() => { setSelectedSlot(slot); setStep(5); }}
+                    onClick={() => { setSelectedSlot(slot); setStep(5); console.log('Seçilen slot:', slot); }}
                     className="p-3 text-center border-2 border-zinc-50 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 font-bold text-xs hover:border-zinc-900 dark:hover:border-zinc-500 transition-all"
                   >
                     {new Date(slot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
