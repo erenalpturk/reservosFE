@@ -38,7 +38,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [appointments, setAppointments] = useState([]);
   const [allPendingAppointments, setAllPendingAppointments] = useState([]);
   const [poolAppointments, setPoolAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialAppointmentsLoading, setIsInitialAppointmentsLoading] = useState(true);
+  const [isRefreshingAppointments, setIsRefreshingAppointments] = useState(false);
   const [shop, setShop] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [highlightApptId, setHighlightApptId] = useState(null);
@@ -57,6 +58,10 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const bottomFixedRef = useRef(null);
   const profileMenuRef = useRef(null);
   const dayPickerRef = useRef(null);
+  const hasLoadedAppointmentsRef = useRef(false);
+  const latestAppointmentsReqRef = useRef(0);
+  const initialLoadCounterRef = useRef(0);
+  const refreshLoadCounterRef = useRef(0);
 
   const weekDays = getWeekDays(weekStart);
 
@@ -65,16 +70,44 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     catch (e) { console.error(e); }
   }, []);
 
-  const fetchAppointments = useCallback(async () => {
-    setLoading(true);
+  const fetchAppointments = useCallback(async ({ background } = {}) => {
+    const shouldBackground = typeof background === 'boolean'
+      ? background
+      : hasLoadedAppointmentsRef.current;
+    const isBlocking = !hasLoadedAppointmentsRef.current || !shouldBackground;
+    const requestId = latestAppointmentsReqRef.current + 1;
+    latestAppointmentsReqRef.current = requestId;
+
+    if (isBlocking) {
+      initialLoadCounterRef.current += 1;
+      setIsInitialAppointmentsLoading(true);
+    } else {
+      refreshLoadCounterRef.current += 1;
+      setIsRefreshingAppointments(true);
+    }
+
     try {
       const params = viewMode === 'week'
         ? { startDate: weekDays[0], endDate: weekDays[6] }
         : { date };
       const r = await api.get('/appointments', { params });
-      setAppointments(r.data.appointments);
+      if (requestId !== latestAppointmentsReqRef.current) return;
+      setAppointments(r.data.appointments || []);
+      hasLoadedAppointmentsRef.current = true;
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally {
+      if (isBlocking) {
+        initialLoadCounterRef.current = Math.max(0, initialLoadCounterRef.current - 1);
+        if (initialLoadCounterRef.current === 0) {
+          setIsInitialAppointmentsLoading(false);
+        }
+      } else {
+        refreshLoadCounterRef.current = Math.max(0, refreshLoadCounterRef.current - 1);
+        if (refreshLoadCounterRef.current === 0) {
+          setIsRefreshingAppointments(false);
+        }
+      }
+    }
   }, [viewMode, date, weekStart]);
 
   const fetchAllPendingAppointments = useCallback(async () => {
@@ -108,24 +141,26 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   useEffect(() => {
     if (tab !== 'program') return;
     fetchAppointments();
-    const iv = setInterval(fetchAppointments, 30000);
+    const iv = setInterval(() => {
+      fetchAppointments({ background: true });
+    }, 30000);
     return () => clearInterval(iv);
   }, [tab, fetchAppointments]);
 
   const handleAction = async (id, action, reason) => {
     const body = (action === 'reject' && reason) ? { reason } : undefined;
     await api.patch(`/appointments/${id}/${action}`, body);
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+    await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
   const handleCancel = async (id, reason) => {
     await api.delete(`/appointments/${id}`, reason ? { data: { reason } } : undefined);
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+    await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
   const handleClaimed = async () => {
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+    await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
   const handleRedirected = async () => {
-    await Promise.all([fetchAppointments(), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+    await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
 
   const ensureNotificationPermission = async () => {
@@ -450,11 +485,18 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
         {/* Orta scroll alanı */}
         {tab === 'program' ? (
-          <div className="min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
+          <div className="relative min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={scopedAppointments} loading={loading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
-              : <WeekView weekDays={weekDays} appointments={scopedAppointments} loading={loading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
+              ? <DayView appointments={scopedAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              : <WeekView weekDays={weekDays} appointments={scopedAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
+            {isRefreshingAppointments && !isInitialAppointmentsLoading && (
+              <div className="pointer-events-none absolute right-6 bottom-4 z-10">
+                <span className="inline-flex rounded-full bg-white/90 dark:bg-zinc-900/90 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 shadow-sm animate-pulse">
+                  Yenileniyor...
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
