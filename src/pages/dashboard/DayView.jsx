@@ -15,6 +15,15 @@ function toDateTimeLocalValue(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function getServiceLabel(appt) {
+  const multiServiceNames = (appt.appointment_services || [])
+    .map(item => item.services?.name)
+    .filter(Boolean);
+
+  if (multiServiceNames.length > 0) return multiServiceNames.join(', ');
+  return appt.services?.name || '';
+}
+
 const GapBlock = ({ gapMs, gapStart, gapEnd, onCollapse, onTimeClick }) => {
   const gapMin = gapMs / 60000;
   const height = Math.min(160, Math.max(36, gapMin * 1.2));
@@ -39,15 +48,15 @@ const GapBlock = ({ gapMs, gapStart, gapEnd, onCollapse, onTimeClick }) => {
         <span className="text-[12px] font-bold text-zinc-300 dark:text-zinc-600">{fmtDuration(gapMs)} boş</span>
       </div>
 
-      {/* Sağ: walk-in butonu */}
+      {/* Sağ: randevusuz ekle butonu */}
       {onTimeClick && (
         <div className="flex items-center px-3 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); onTimeClick(toDateTimeLocalValue(gapStart)); }}
-            className="w-6 h-6 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center transition-colors"
-            title="Walk-in ekle"
+            className="w-9 h-9 rounded-xl bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center transition-colors"
+            title="Randevusuz ekle"
           >
-            <svg className="w-3 h-3 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <svg className="w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
           </button>
@@ -100,6 +109,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGap
     const isPast = new Date(appt.ends_at).getTime() < now;
     const color = appt.staff?.color_hex || '#71717a';
     const durMs = new Date(appt.ends_at) - new Date(appt.starts_at);
+    const serviceLabel = getServiceLabel(appt);
 
     items.push(
       <button
@@ -121,10 +131,10 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGap
         {/* Sağ: isim + hizmet */}
         <div className="flex-1 min-w-0 px-3 py-3 flex flex-col justify-center gap-0.5">
           <span className="text-[14px] text-zinc-900 dark:text-zinc-100 leading-tight truncate">
-            {appt.phone_customers?.full_name || 'Walk-In'}
+            {appt.phone_customers?.full_name || 'Randevusuz'}
           </span>
           <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 truncate">
-            {appt.services?.name}{appt.services?.name ? ' · ' : ''}{fmtDuration(durMs)}
+            {serviceLabel}{serviceLabel ? ' · ' : ''}{fmtDuration(durMs)}
           </span>
         </div>
 

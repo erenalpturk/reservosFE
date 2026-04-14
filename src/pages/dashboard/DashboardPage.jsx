@@ -191,6 +191,19 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   };
   const handleDayClick = (day) => { setDate(day); setViewMode('day'); };
 
+  const handleWalkInSuccess = useCallback((createdAppointment) => {
+    if (createdAppointment?.id) {
+      setAppointments(prev => {
+        const withoutCurrent = prev.filter(a => a.id !== createdAppointment.id);
+        return [...withoutCurrent, createdAppointment]
+          .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+      });
+      hasLoadedAppointmentsRef.current = true;
+    }
+
+    fetchAppointments({ background: true });
+  }, [fetchAppointments]);
+
 
   const shopHours = shop?.business_hours || [];
   const startHour = shopHours.length
@@ -440,9 +453,9 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
                 <button
                   onClick={() => setShowWalkIn(true)}
-                  className="h-[38px] px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
+                  className="h-[42px] px-4 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all active:scale-95 flex-shrink-0"
                 >
-                  Walk-in
+                  +
                 </button>
               </div>
 
@@ -569,7 +582,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
           shop={shop}
           currentUser={user}
           onClose={() => { setShowWalkIn(false); setWalkInStartsAt(null); }}
-          onSuccess={fetchAppointments}
+          onSuccess={handleWalkInSuccess}
           initialStartsAt={walkInStartsAt}
         />
       )}

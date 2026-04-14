@@ -86,7 +86,7 @@ const RedirectModal = ({ appt, businessStaff, user, onClose, onRedirected }) => 
             </div>
 
             <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3">
-              {appt.phone_customers?.full_name || 'Walk-In'} ·{' '}
+              {appt.phone_customers?.full_name || 'Randevusuz'} ·{' '}
               {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}
             </div>
 
@@ -139,7 +139,7 @@ const RedirectModal = ({ appt, businessStaff, user, onClose, onRedirected }) => 
                 İlk kabul eden kişi randevuyu üstlenir.
               </p>
               <div className="mt-3 text-[11px] font-black text-orange-500 uppercase tracking-widest">
-                {appt.phone_customers?.full_name || 'Walk-In'} · {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}
+                {appt.phone_customers?.full_name || 'Randevusuz'} · {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}
               </div>
             </div>
 
@@ -164,7 +164,7 @@ const RedirectModal = ({ appt, businessStaff, user, onClose, onRedirected }) => 
             </div>
 
             <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 flex-shrink-0">
-              {appt.phone_customers?.full_name || 'Walk-In'} · {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}
+              {appt.phone_customers?.full_name || 'Randevusuz'} · {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)}
             </div>
 
             <div className="overflow-y-auto space-y-2">
@@ -252,7 +252,7 @@ const RedirectModal = ({ appt, businessStaff, user, onClose, onRedirected }) => 
                         {isRequested && <span className="text-red-500">Çakışıyor</span>}
                       </div>
                       <div className="text-zinc-500 mt-0.5">
-                        {a.phone_customers?.full_name || 'Walk-In'}
+                        {a.phone_customers?.full_name || 'Randevusuz'}
                         {' · '}
                         {(a.appointment_services || []).map(as => as.services?.name).filter(Boolean).join(', ') || '—'}
                       </div>
@@ -265,7 +265,7 @@ const RedirectModal = ({ appt, businessStaff, user, onClose, onRedirected }) => 
             {/* İstenen slot vurgusu */}
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-[11px] font-bold text-zinc-500 mb-4 flex-shrink-0">
               Yönlendirilecek: {fmtTime(appt.starts_at)} — {fmtTime(appt.ends_at)} ·{' '}
-              {appt.phone_customers?.full_name || 'Walk-In'}
+              {appt.phone_customers?.full_name || 'Randevusuz'}
             </div>
 
             <button
