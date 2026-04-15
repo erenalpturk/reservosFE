@@ -74,6 +74,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     return activeServices[0] ? [activeServices[0].id] : [];
   });
   const [submitting, setSubmitting] = useState(false);
+  const [conflictWarning, setConflictWarning] = useState(false);
 
   const currentStaffName = currentUser.fullName
     || activeStaff.find(b => b.id === currentUser.staffId)?.full_name
@@ -84,6 +85,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       setForm(prev => ({ ...prev, startsAt: initialStartsAt }));
     }
   }, [initialStartsAt]);
+
+  // Saat veya personel değişirse çakışma uyarısını sıfırla
+  useEffect(() => { setConflictWarning(false); }, [form.startsAt, form.staffId]);
 
   useEffect(() => {
     fullNameInputRef.current?.focus();
@@ -136,7 +140,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     setStartsAtFromDate(base);
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event, force = false) => {
     event?.preventDefault();
     if (submitting) return;
 
@@ -172,6 +176,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
         endsAt,
         fullName,
         phone: phone || undefined,
+        ...(force && { force: true }),
       });
 
       const selectedStaff = activeStaff.find(b => b.id === targetStaffId)
@@ -207,7 +212,11 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       onSuccess?.(optimisticAppointment);
       onClose();
     } catch (err) {
-      toast(err.response?.data?.error || 'Randevusuz kayit eklenemedi.');
+      if (err.response?.status === 409 && err.response?.data?.error === 'slot_conflict') {
+        setConflictWarning(true);
+      } else {
+        toast(err.response?.data?.error || 'Randevusuz kayit eklenemedi.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -216,7 +225,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   const endsAtPreview = computeEndsAt(form.startsAt);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:p-4 relative">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={handleClose} />
       <div className="relative w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
         <div className="flex justify-between items-center mb-6">
@@ -360,6 +369,39 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
           </div>
         </form>
       </div>
+
+      {conflictWarning && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/30 dark:bg-black/50" onClick={() => setConflictWarning(false)} />
+          <div className="relative w-full max-w-xs bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-2xl p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl leading-none mt-0.5">⚠️</span>
+              <div className="space-y-1">
+                <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Çakışan Randevu</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Bu saatte başka bir randevu var. Yine de eklemek istiyor musun?</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleSubmit(null, true)}
+                disabled={submitting}
+                className="flex-1 h-10 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"
+              >
+                Yine de Ekle
+              </button>
+              <button
+                type="button"
+                onClick={() => setConflictWarning(false)}
+                disabled={submitting}
+                className="flex-1 h-10 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-[11px] font-black uppercase tracking-widest hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors disabled:opacity-50"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

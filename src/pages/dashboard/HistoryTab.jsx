@@ -59,7 +59,7 @@ const HistoryTab = ({ appointments, loading, onSelect }) => {
             {/* Orta: isim + hizmet */}
             <div className="flex-1 min-w-0 px-3 py-3 flex flex-col justify-center gap-0.5">
               <span className="text-[14px] text-zinc-900 dark:text-zinc-100 leading-tight truncate">
-                {appt.phone_customers?.full_name || 'Randevusuz'}
+                {appt.phone_customers?.full_name || appt.customer_name || 'Randevusuz'}
               </span>
               {serviceLabel ? (
                 <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 truncate">

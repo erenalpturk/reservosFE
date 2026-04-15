@@ -106,7 +106,7 @@ const PendingAppointmentsModal = ({
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-black text-zinc-800 truncate">
-                            {appt.phone_customers?.full_name || 'Randevusuz'}
+                            {appt.phone_customers?.full_name || appt.customer_name || 'Randevusuz'}
                           </span>
                           {appt.redirect_type === 'direct' && (
                             <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-green-100 text-green-700 flex-shrink-0">
@@ -174,7 +174,7 @@ const PendingAppointmentsModal = ({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-sm font-black text-zinc-800 truncate">
-                        {appt.phone_customers?.full_name || 'Randevusuz'}
+                        {appt.phone_customers?.full_name || appt.customer_name || 'Randevusuz'}
                       </div>
                       {appt.phone_customers?.phone && (
                         <div className="text-[11px] font-bold text-zinc-400 mt-0.5">{appt.phone_customers.phone}</div>

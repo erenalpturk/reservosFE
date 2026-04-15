@@ -50,7 +50,7 @@ const DetailModal = ({ appt, user, businessStaff, onClose, onAction, onCancel, o
           <div className="flex justify-between items-start mb-4">
             <div>
               <div className="font-black text-xl uppercase tracking-tight leading-tight">
-                {appt.phone_customers?.full_name || 'Randevusuz'}
+                {appt.phone_customers?.full_name || appt.customer_name || 'Randevusuz'}
               </div>
               {appt.phone_customers?.phone && (
                 <div className="text-xs font-bold text-zinc-400 mt-0.5">{appt.phone_customers.phone}</div>

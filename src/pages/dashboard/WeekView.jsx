@@ -82,7 +82,7 @@ const DayCard = ({ day, appts, isToday, startHour, endHour, onDayClick, onSelect
               >
                 <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${chipDot(appt.status)}`} />
                 <span className="text-[11px] font-normal text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
-                  {fmtTime(appt.starts_at)} {(appt.phone_customers?.full_name || 'Randevusuz').split(' ')[0]}
+                  {fmtTime(appt.starts_at)} {(appt.phone_customers?.full_name || appt.customer_name || 'Randevusuz').split(' ')[0]}
                 </span>
               </button>
             ))}
