@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import WalkInModal from './WalkInModal';
+import HistoryTab from './HistoryTab';
 import SettingsTab from './SettingsTab';
 import DetailModal from './DetailModal';
 import PendingAppointmentsModal from './PendingAppointmentsModal';
@@ -48,6 +49,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [showWalkIn, setShowWalkIn] = useState(false);
   const [walkInStartsAt, setWalkInStartsAt] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [historyAppointments, setHistoryAppointments] = useState([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [expandGaps, setExpandGaps] = useState(false);
   const [staffScope, setStaffScope] = useState('shop'); // 'shop' | 'personal'
   const [contentHeight, setContentHeight] = useState('auto');
@@ -124,6 +127,17 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     } catch (e) { console.error(e); }
   }, []);
 
+  const fetchHistoryAppointments = useCallback(async () => {
+    setIsHistoryLoading(true);
+    try {
+      const r = await api.get('/appointments', {
+        params: { status: 'rejected,expired,cancelled_by_customer,cancelled_by_shop' },
+      });
+      setHistoryAppointments(r.data.appointments || []);
+    } catch (e) { console.error(e); }
+    finally { setIsHistoryLoading(false); }
+  }, []);
+
   useEffect(() => { fetchShop(); }, []);
 
   useEffect(() => {
@@ -146,6 +160,11 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     }, 30000);
     return () => clearInterval(iv);
   }, [tab, fetchAppointments]);
+
+  useEffect(() => {
+    if (tab !== 'gecmis') return;
+    fetchHistoryAppointments();
+  }, [tab, fetchHistoryAppointments]);
 
   const handleAction = async (id, action, reason) => {
     const body = (action === 'reject' && reason) ? { reason } : undefined;
@@ -218,15 +237,18 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
     ? appointments.filter(a => a.staff?.id === user.staffId)
     : appointments;
 
+  const CALENDAR_STATUSES = ['pending', 'confirmed', 'in_pool', 'no_show', 'completed'];
+  const calendarAppointments = scopedAppointments.filter(a => CALENDAR_STATUSES.includes(a.status));
+
   const pendingCount = allPendingAppointments.length;
   const poolCount = poolAppointments.length;
   const attentionCount = pendingCount + poolCount;
   const businessStaff = (shop?.staff || []).filter(s => s.is_active);
   const programSummary = [
-    { label: 'Toplam', count: scopedAppointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
+    { label: 'Toplam', count: calendarAppointments.length, cls: 'text-zinc-700 dark:text-zinc-100' },
     { label: 'Bekleyen', count: pendingCount, cls: 'text-orange-500' },
-    { label: 'Onaylı', count: scopedAppointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
-    { label: 'Tamam', count: scopedAppointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
+    { label: 'Onaylı', count: calendarAppointments.filter(a => a.status === 'confirmed').length, cls: 'text-green-600' },
+    { label: 'Tamam', count: calendarAppointments.filter(a => a.status === 'completed').length, cls: 'text-blue-500' },
   ];
   const summaryTitle = viewMode === 'day'
     ? toLocalDate(date).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -293,7 +315,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
           {/* ── Satır 1: Başlık + Aksiyonlar ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3 gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              {tab === 'ayarlar' && (
+              {(tab === 'ayarlar' || tab === 'gecmis') && (
                 <button
                   type="button"
                   onClick={() => setTab('program')}
@@ -307,7 +329,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 </button>
               )}
               <h1 className="text-xl font-black uppercase tracking-tighter">
-                {tab === 'program' ? 'Program' : 'Ayarlar'}
+                {tab === 'program' ? 'Program' : tab === 'ayarlar' ? 'Ayarlar' : 'Geçmiş'}
               </h1>
               {tab === 'program' && attentionCount > 0 && (
                 <span className="px-1.5 py-0.5 bg-orange-400 text-white rounded-full text-[9px] font-black">
@@ -357,7 +379,14 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                     }}
                     className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                   >
-                    {tab === 'program' ? 'Settings' : 'Program'}
+                    {tab === 'program' ? 'Ayarlar' : 'Program'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTab('gecmis'); setShowProfileMenu(false); }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Geçmiş
                   </button>
                   <button
                     type="button"
@@ -500,8 +529,8 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
         {tab === 'program' ? (
           <div className="relative min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={scopedAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
-              : <WeekView weekDays={weekDays} appointments={scopedAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
+              ? <DayView appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              : <WeekView weekDays={weekDays} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
             {isRefreshingAppointments && !isInitialAppointmentsLoading && (
               <div className="pointer-events-none absolute right-6 bottom-4 z-10">
@@ -510,6 +539,10 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
                 </span>
               </div>
             )}
+          </div>
+        ) : tab === 'gecmis' ? (
+          <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
+            <HistoryTab appointments={historyAppointments} loading={isHistoryLoading} onSelect={setSelectedAppt} />
           </div>
         ) : (
           <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
