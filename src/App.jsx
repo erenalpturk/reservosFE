@@ -91,7 +91,7 @@ function App() {
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboardPage isDark={isDark} onToggleTheme={toggleTheme} />
+              <AdminDashboardPage />
             </AdminRoute>
           }
         />
