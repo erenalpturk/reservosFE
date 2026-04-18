@@ -48,7 +48,6 @@ const getDefaultStartsAt = (initialStartsAt) => {
 
 const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
   const toast = useToast();
-  const fullNameInputRef = useRef(null);
   const phoneInputRef = useRef(null);
 
   const activeServices = useMemo(
@@ -127,10 +126,6 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
   // Saat veya personel değişirse çakışma uyarısını sıfırla
   useEffect(() => { setConflictWarning(false); }, [form.startsAt, form.staffId]);
-
-  useEffect(() => {
-    fullNameInputRef.current?.focus();
-  }, []);
 
   useEffect(() => {
     if (selectedServiceIds.length === 0 || typeof window === 'undefined') return;
@@ -281,9 +276,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   const endsAtPreview = computeEndsAt(form.startsAt);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:p-4 relative">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={handleClose} />
-      <div className="relative w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60" />
+      <div className="relative z-10 h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain bg-white dark:bg-zinc-900 p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black uppercase tracking-tight">Randevusuz Ekle</h2>
           <button disabled={submitting} onClick={handleClose} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 font-black text-xl leading-none disabled:opacity-50">✕</button>
@@ -295,7 +290,6 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
             <div>
               <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
               <input
-                ref={fullNameInputRef}
                 type="text"
                 placeholder="Ahmet Yılmaz"
                 value={form.fullName}
