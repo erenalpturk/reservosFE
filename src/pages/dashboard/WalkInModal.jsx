@@ -4,10 +4,11 @@ import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
 
 const LAST_SERVICE_IDS_KEY_PREFIX = 'dashboard:walkin:last-services';
+const WALK_IN_STEP_MINUTES = 5;
 const QUICK_TIME_PRESETS = [
-  { label: 'Hemen', minutes: 0 },
+  { label: '+5 dk', minutes: 5 },
+  { label: '+10 dk', minutes: 10 },
   { label: '+15 dk', minutes: 15 },
-  { label: '+30 dk', minutes: 30 },
 ];
 
 const toDateTimeLocalValue = (date) => {
@@ -15,20 +16,34 @@ const toDateTimeLocalValue = (date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-const roundToNextQuarterHour = (inputDate) => {
+const toDateInputValue = (date) => toDateTimeLocalValue(date).slice(0, 10);
+const toTimeInputValue = (date) => toDateTimeLocalValue(date).slice(11, 16);
+
+const splitDateTimeLocalValue = (value) => {
+  if (!value || typeof value !== 'string') return { date: '', time: '' };
+  const [date = '', time = ''] = value.split('T');
+  return { date, time: time.slice(0, 5) };
+};
+
+const buildDateTimeLocalFromParts = (date, time) => {
+  if (!date || !time) return '';
+  return `${date}T${time}`;
+};
+
+const roundToNextStepMinute = (inputDate, stepMinutes = WALK_IN_STEP_MINUTES) => {
   const date = new Date(inputDate);
   date.setSeconds(0, 0);
   const minutes = date.getMinutes();
-  const remainder = minutes % 15;
+  const remainder = minutes % stepMinutes;
   if (remainder !== 0) {
-    date.setMinutes(minutes + (15 - remainder));
+    date.setMinutes(minutes + (stepMinutes - remainder));
   }
   return date;
 };
 
 const getDefaultStartsAt = (initialStartsAt) => {
   if (initialStartsAt) return initialStartsAt;
-  return toDateTimeLocalValue(roundToNextQuarterHour(new Date()));
+  return toDateTimeLocalValue(roundToNextStepMinute(new Date()));
 };
 
 const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt }) => {
@@ -80,6 +95,30 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     || activeStaff.find(b => b.id === currentUser.staffId)?.full_name
     || 'Personel';
 
+  const roundedNow = roundToNextStepMinute(new Date());
+  const todayDateValue = toDateInputValue(roundedNow);
+  const minTimeForToday = toTimeInputValue(roundedNow);
+  const startsAtParts = useMemo(() => {
+    const parts = splitDateTimeLocalValue(form.startsAt);
+    return {
+      date: parts.date || todayDateValue,
+      time: parts.time || minTimeForToday,
+    };
+  }, [form.startsAt, todayDateValue, minTimeForToday]);
+  const timeOptions = useMemo(() => {
+    const list = [];
+    for (let minute = 0; minute < 24 * 60; minute += WALK_IN_STEP_MINUTES) {
+      const hours = String(Math.floor(minute / 60)).padStart(2, '0');
+      const mins = String(minute % 60).padStart(2, '0');
+      list.push(`${hours}:${mins}`);
+    }
+    return list;
+  }, []);
+  const visibleTimeOptions = useMemo(() => {
+    if (startsAtParts.date !== todayDateValue) return timeOptions;
+    return timeOptions.filter(time => time >= minTimeForToday);
+  }, [startsAtParts.date, todayDateValue, timeOptions, minTimeForToday]);
+
   useEffect(() => {
     if (initialStartsAt) {
       setForm(prev => ({ ...prev, startsAt: initialStartsAt }));
@@ -125,17 +164,34 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   };
 
   const setStartsAtFromDate = (date) => {
-    const rounded = roundToNextQuarterHour(date);
+    const rounded = roundToNextStepMinute(date);
     setForm(prev => ({ ...prev, startsAt: toDateTimeLocalValue(rounded) }));
   };
 
-  const applyQuickPreset = (minutes) => {
-    if (minutes === 0) {
-      setStartsAtFromDate(new Date());
-      return;
-    }
+  const setStartsAtFromParts = (date, time) => {
+    const combined = buildDateTimeLocalFromParts(date, time);
+    if (!combined) return;
+    setForm(prev => ({ ...prev, startsAt: combined }));
+  };
 
-    const base = form.startsAt ? new Date(form.startsAt) : roundToNextQuarterHour(new Date());
+  const handleDatePartChange = (date) => {
+    let nextTime = startsAtParts.time;
+    if (date === todayDateValue && nextTime < minTimeForToday) {
+      nextTime = minTimeForToday;
+    }
+    setStartsAtFromParts(date, nextTime);
+  };
+
+  const handleTimePartChange = (time) => {
+    const date = startsAtParts.date || todayDateValue;
+    const nextTime = date === todayDateValue && time < minTimeForToday
+      ? minTimeForToday
+      : time;
+    setStartsAtFromParts(date, nextTime);
+  };
+
+  const applyQuickPreset = (minutes) => {
+    const base = form.startsAt ? new Date(form.startsAt) : roundToNextStepMinute(new Date());
     base.setMinutes(base.getMinutes() + minutes);
     setStartsAtFromDate(base);
   };
@@ -227,7 +283,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-2 sm:p-4 relative">
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={handleClose} />
-      <div className="relative w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
+      <div className="relative w-full max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black uppercase tracking-tight">Randevusuz Ekle</h2>
           <button disabled={submitting} onClick={handleClose} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 font-black text-xl leading-none disabled:opacity-50">✕</button>
@@ -235,6 +291,53 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <fieldset disabled={submitting} className="space-y-4">
+                        {/* Ad Soyad */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
+              <input
+                ref={fullNameInputRef}
+                type="text"
+                placeholder="Ahmet Yılmaz"
+                value={form.fullName}
+                onChange={e => setForm({ ...form, fullName: e.target.value })}
+                autoComplete="name"
+                autoCapitalize="words"
+                enterKeyHint="next"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    phoneInputRef.current?.focus();
+                  }
+                }}
+                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
+              />
+            </div>
+
+            {/* Telefon (opsiyonel) */}
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
+                Telefon <span className="normal-case font-normal text-zinc-300 dark:text-zinc-400">(opsiyonel)</span>
+              </label>
+              <input
+                ref={phoneInputRef}
+                type="tel"
+                placeholder="05XXXXXXXXX"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+                inputMode="numeric"
+                autoComplete="tel-national"
+                enterKeyHint="done"
+                maxLength={11}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
+              />
+            </div>
+            
             {/* Personel seçimi (sadece sahip için) */}
             {currentUser.isOwner && (
               <div>
@@ -288,13 +391,24 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
             {/* Başlangıç tarihi/saati */}
             <div>
               <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Başlangıç</label>
-              <input
-                type="datetime-local"
-                value={form.startsAt}
-                onChange={e => setForm({ ...form, startsAt: e.target.value })}
-                step={900}
-                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
-              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={startsAtParts.date}
+                  min={todayDateValue}
+                  onChange={e => handleDatePartChange(e.target.value)}
+                  className="w-full min-w-0 p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
+                />
+                <select
+                  value={startsAtParts.time}
+                  onChange={e => handleTimePartChange(e.target.value)}
+                  className="w-full min-w-0 p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
+                >
+                  {visibleTimeOptions.map(time => (
+                    <option key={time} value={time}>{time}</option>
+                  ))}
+                </select>
+              </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {QUICK_TIME_PRESETS.map(preset => (
                   <button
@@ -314,52 +428,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
               )}
             </div>
 
-            {/* Ad Soyad */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Ad Soyad</label>
-              <input
-                ref={fullNameInputRef}
-                type="text"
-                placeholder="Ahmet Yılmaz"
-                value={form.fullName}
-                onChange={e => setForm({ ...form, fullName: e.target.value })}
-                autoComplete="name"
-                autoCapitalize="words"
-                enterKeyHint="next"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    phoneInputRef.current?.focus();
-                  }
-                }}
-                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
-              />
-            </div>
 
-            {/* Telefon (opsiyonel) */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">
-                Telefon <span className="normal-case font-normal text-zinc-300 dark:text-zinc-400">(opsiyonel)</span>
-              </label>
-              <input
-                ref={phoneInputRef}
-                type="tel"
-                placeholder="05XXXXXXXXX"
-                value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
-                inputMode="numeric"
-                autoComplete="tel-national"
-                enterKeyHint="done"
-                maxLength={11}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                className="w-full p-4 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none text-sm font-bold"
-              />
-            </div>
           </fieldset>
 
           <div className="sticky bottom-0 -mx-1 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] bg-gradient-to-t from-white via-white dark:from-zinc-900 dark:via-zinc-900 to-transparent">
