@@ -10,6 +10,19 @@ export const STATUS_LABELS = {
   in_pool: 'Havuzda',
 };
 
+
+export const STATUS_BORDER = {
+  pending: 'border-orange-400',
+  confirmed: 'border-green-400',
+  completed: 'border-blue-400',
+  no_show: 'border-red-400',
+  rejected: 'border-zinc-300',
+  cancelled_by_customer: 'border-zinc-300',
+  cancelled_by_shop: 'border-zinc-300',
+  expired: 'border-zinc-300',
+  in_pool: 'border-orange-400',
+};
+
 export const STATUS_DOT = {
   pending: 'bg-orange-400',
   confirmed: 'bg-green-400',

@@ -52,7 +52,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const [historyAppointments, setHistoryAppointments] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [expandGaps, setExpandGaps] = useState(false);
-  const [staffScope, setStaffScope] = useState('shop'); // 'shop' | 'personal'
+  const [staffScope, setStaffScope] = useState('personal'); // 'shop' | 'personal'
   const [contentHeight, setContentHeight] = useState('auto');
   const { user, logout } = useAuthStore();
   const toast = useToast();
@@ -533,7 +533,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
         {tab === 'program' ? (
           <div className="relative min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
             {viewMode === 'day'
-              ? <DayView appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+              ? <DayView currentUser={user} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
               : <WeekView weekDays={weekDays} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
             }
             {isRefreshingAppointments && !isInitialAppointmentsLoading && (

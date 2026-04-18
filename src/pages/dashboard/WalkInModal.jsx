@@ -346,7 +346,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
             </div>
             
             {/* Personel seçimi (sadece sahip için) */}
-            {currentUser.isOwner && (
+            {/* {currentUser.isOwner && (
               <div>
                 <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1 ml-1">Personel</label>
                 <select
@@ -360,7 +360,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
                   ))}
                 </select>
               </div>
-            )}
+            )} */}
 
             {/* Hizmet (çoklu seçim) */}
             <div>
