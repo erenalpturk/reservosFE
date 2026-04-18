@@ -4,6 +4,7 @@ import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
 
 const LAST_SERVICE_IDS_KEY_PREFIX = 'dashboard:walkin:last-services';
+const DIGER_ID = '__diger__';
 const WALK_IN_STEP_MINUTES = 5;
 const QUICK_TIME_PRESETS = [
   { label: '+5 dk', minutes: 5 },
@@ -87,6 +88,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     if (defaultService) return [defaultService.id];
     return activeServices[0] ? [activeServices[0].id] : [];
   });
+  const [digerDuration, setDigerDuration] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [conflictWarning, setConflictWarning] = useState(false);
 
@@ -130,13 +132,20 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   useEffect(() => {
     if (selectedServiceIds.length === 0 || typeof window === 'undefined') return;
     try {
-      localStorage.setItem(serviceStorageKey, JSON.stringify(selectedServiceIds));
+      localStorage.setItem(serviceStorageKey, JSON.stringify(selectedServiceIds.filter(id => id !== DIGER_ID)));
     } catch {
       // ignore localStorage failures
     }
   }, [selectedServiceIds, serviceStorageKey]);
 
-  const selectedServicesData = activeServices.filter(s => selectedServiceIds.includes(s.id));
+  const selectedServicesData = useMemo(() => {
+    const real = activeServices.filter(s => selectedServiceIds.includes(s.id));
+    const dur = parseInt(digerDuration);
+    if (selectedServiceIds.includes(DIGER_ID) && dur > 0) {
+      return [...real, { id: DIGER_ID, name: 'Diğer', duration_min: dur, buffer_min: 0 }];
+    }
+    return real;
+  }, [activeServices, selectedServiceIds, digerDuration]);
   const totalDuration = selectedServicesData.reduce(
     (sum, s) => sum + (s.duration_min || 0) + (s.buffer_min || 0), 0
   );
@@ -148,9 +157,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   };
 
   const toggleService = (id) => {
-    setSelectedServiceIds(prev =>
-      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
-    );
+    const isSelected = selectedServiceIds.includes(id);
+    if (id === DIGER_ID && isSelected) setDigerDuration('');
+    setSelectedServiceIds(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id]);
   };
 
   const handleClose = () => {
@@ -202,6 +211,10 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       toast('Hizmet, saat ve ad zorunludur.');
       return;
     }
+    if (selectedServiceIds.includes(DIGER_ID) && (!digerDuration || parseInt(digerDuration) < 1)) {
+      toast('"Diğer" için süre girilmeli.');
+      return;
+    }
 
     const startsAtDate = new Date(form.startsAt);
     if (Number.isNaN(startsAtDate.getTime())) {
@@ -222,7 +235,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     try {
       const response = await api.post('/appointments/walk-in', {
         staffId: targetStaffId || undefined,
-        serviceIds: selectedServiceIds,
+        serviceIds: selectedServiceIds.filter(id => id !== DIGER_ID),
         startsAt: startsAtDate.toISOString(),
         endsAt,
         fullName,
@@ -374,6 +387,30 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
                     </button>
                   );
                 })}
+                {/* Diğer — özel süre girişi */}
+                <div className={`w-full min-h-[52px] flex justify-between items-center p-3.5 rounded-xl border-2 transition-all ${selectedServiceIds.includes(DIGER_ID) ? 'border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100' : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:border-zinc-400 dark:hover:border-zinc-500'}`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleService(DIGER_ID)}
+                    className="flex items-center gap-2 flex-1 text-left"
+                  >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${selectedServiceIds.includes(DIGER_ID) ? 'border-white bg-white dark:border-zinc-900 dark:bg-zinc-900' : 'border-zinc-300 dark:border-zinc-600'}`}>
+                      {selectedServiceIds.includes(DIGER_ID) && <div className="w-2 h-2 rounded-sm bg-zinc-900 dark:bg-white" />}
+                    </div>
+                    <span className={`font-bold text-sm ${selectedServiceIds.includes(DIGER_ID) ? 'text-white dark:text-zinc-900' : 'text-zinc-900 dark:text-zinc-100'}`}>Diğer</span>
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="480"
+                    inputMode="numeric"
+                    placeholder="dk"
+                    value={digerDuration}
+                    onClick={() => { if (!selectedServiceIds.includes(DIGER_ID)) toggleService(DIGER_ID); }}
+                    onChange={e => setDigerDuration(e.target.value)}
+                    className={`w-16 text-center text-sm font-bold rounded-lg py-1.5 focus:outline-none ${selectedServiceIds.includes(DIGER_ID) ? 'bg-zinc-700 text-white dark:bg-zinc-800 dark:text-zinc-100 placeholder-zinc-400' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300 placeholder-zinc-400'}`}
+                  />
+                </div>
               </div>
               {selectedServiceIds.length > 0 && (
                 <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-2 ml-1">
