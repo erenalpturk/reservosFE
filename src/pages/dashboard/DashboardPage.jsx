@@ -181,6 +181,10 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
   const handleRedirected = async () => {
     await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
   };
+  const handleReschedule = async (id, startsAt, endsAt) => {
+    await api.patch(`/appointments/${id}/reschedule`, { startsAt, endsAt });
+    await Promise.all([fetchAppointments({ background: true }), fetchAllPendingAppointments(), fetchPoolAppointments()]);
+  };
 
   const ensureNotificationPermission = async () => {
     try {
@@ -607,6 +611,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
           onAction={handleAction}
           onCancel={handleCancel}
           onRedirected={handleRedirected}
+          onReschedule={handleReschedule}
         />
       )}
 

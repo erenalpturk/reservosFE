@@ -109,6 +109,8 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGap
     const isPast = new Date(appt.ends_at).getTime() < now;
     const color = appt.staff?.color_hex || '#71717a';
     const durMs = new Date(appt.ends_at) - new Date(appt.starts_at);
+    const durMin = durMs / 60000;
+    const apptHeight = Math.min(200, Math.max(56, durMin * 1.2));
     const serviceLabel = getServiceLabel(appt);
 
     items.push(
@@ -117,7 +119,7 @@ const DayView = ({ appointments, loading, onSelect, onTimeClick, date, expandGap
         ref={isHighlighted ? highlightRef : null}
         onClick={() => console.log('Selected appointment:', appt) || onSelect(appt)}
         className={`w-full flex items-stretch gap-0 rounded-lg overflow-hidden text-left transition-all hover:opacity-80 active:scale-[0.99] bg-white dark:bg-zinc-800/60 ${isHighlighted ? 'appt-highlight ring-2 ring-orange-300 ring-offset-1' : ''} ${isPast ? 'opacity-40' : ''} ${appt.status == 'completed' || appt.status == 'expired' ? 'opacity-40' : ''} `}
-        style={{ borderLeft: `3px solid ${color}` }}
+        style={{ borderLeft: `3px solid ${color}`, height: `${apptHeight}px` }}
       >
         {/* Sol: saatler */}
         <div className="flex flex-col items-end justify-center px-3 py-3 gap-0.5 flex-shrink-0 w-14">
