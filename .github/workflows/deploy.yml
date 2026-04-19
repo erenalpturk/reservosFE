@@ -17,14 +17,14 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # 1. Backend Güncelleme
-            cd /root/.openclaw/workspace/barberappBackend
+            cd /root/aet/reservos/reservosBE
             git pull origin main
             npm install
             pm2 restart all
             echo "⚙️ Backend başarıyla güncellendi!"
 
             # 2. Frontend Güncelleme
-            cd /root/.openclaw/workspace/barberappFront
+            cd /root/aet/reservos/reservosFE
             git pull origin main
 
             # Frontend env dosyasini her deploy'da secrets ile olustur
