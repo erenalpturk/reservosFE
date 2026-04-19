@@ -22,7 +22,33 @@ function buildServiceWorkerUrl() {
     if (value) params.set(key, value);
   });
 
+  // Bump when SW behavior changes to force browser to fetch updated script.
+  params.set('swv', '2026-04-19-dupfix');
+
   return `/firebase-messaging-sw.js?${params.toString()}`;
+}
+
+async function cleanupLegacyMessagingWorkers() {
+  if (typeof navigator === 'undefined' || !navigator.serviceWorker?.getRegistrations) return;
+
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  const messagingRegistrations = registrations.filter((reg) => {
+    const scriptUrl = reg.active?.scriptURL || reg.waiting?.scriptURL || reg.installing?.scriptURL || '';
+    return scriptUrl.includes('/firebase-messaging-sw.js');
+  });
+
+  // Keep only the dedicated FCM scope registration, remove legacy ones (e.g. root scope).
+  await Promise.all(messagingRegistrations.map(async (reg) => {
+    const scope = reg.scope || '';
+    const isDedicatedFcmScope = scope.includes('/firebase-cloud-messaging-push-scope');
+    if (!isDedicatedFcmScope) {
+      try {
+        await reg.unregister();
+      } catch (err) {
+        console.error('Eski FCM service worker kaldirilamadi:', err.message);
+      }
+    }
+  }));
 }
 
 export async function canUseFcm() {
@@ -65,6 +91,8 @@ export async function setupFcmForCurrentDevice(options = {}) {
 
   const app = getFirebaseApp();
   if (!app) return { ok: false, reason: 'missing_firebase_config' };
+
+  await cleanupLegacyMessagingWorkers();
 
   const swRegistration = await navigator.serviceWorker.register(buildServiceWorkerUrl(), {
     scope: '/firebase-cloud-messaging-push-scope',

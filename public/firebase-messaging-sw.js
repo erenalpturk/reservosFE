@@ -26,12 +26,22 @@ if (hasRequiredConfig(config)) {
 
   var messaging = firebase.messaging();
   messaging.onBackgroundMessage(function (payload) {
-    var notificationTitle = (payload.notification && payload.notification.title) || 'ReservOS';
-    var notificationBody = (payload.notification && payload.notification.body) || 'Yeni bildirim var.';
+    var notificationTitle = (payload.data && payload.data.title)
+      || (payload.notification && payload.notification.title)
+      || 'ReservOS';
+    var notificationBody = (payload.data && payload.data.body)
+      || (payload.notification && payload.notification.body)
+      || 'Yeni bildirim var.';
+    var notificationTag = (payload.data && payload.data.type ? payload.data.type : 'notification')
+      + ':'
+      + (payload.data && (payload.data.appointmentId || payload.data.shopId) ? (payload.data.appointmentId || payload.data.shopId) : 'general');
 
     self.registration.showNotification(notificationTitle, {
       body: notificationBody,
       icon: '/icon-192.svg',
+      tag: notificationTag,
+      renotify: false,
+      requireInteraction: true,
       data: payload.data || {},
     });
   });

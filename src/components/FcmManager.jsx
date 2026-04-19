@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import api from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 import { subscribeForegroundMessages, setupFcmForCurrentDevice } from '../lib/fcm';
@@ -9,8 +9,8 @@ const REGISTERED_TOKEN_KEY = 'fcm:registered-token';
 async function showForegroundSystemNotification(payload) {
   if (typeof window === 'undefined' || Notification.permission !== 'granted') return;
 
-  const title = payload?.notification?.title || 'Yeni bildirim';
-  const body = payload?.notification?.body || '';
+  const title = payload?.data?.title || payload?.notification?.title || 'Yeni bildirim';
+  const body = payload?.data?.body || payload?.notification?.body || '';
   const data = payload?.data || {};
   const options = {
     body,
@@ -36,25 +36,57 @@ const FcmManager = () => {
   const user = useAuthStore(state => state.user);
   const token = useAuthStore(state => state.token);
   const toast = useToast();
+  const recentMessageKeysRef = useRef(new Map());
+
+  const isDuplicateMessage = (payload) => {
+    const title = payload?.data?.title || payload?.notification?.title || '';
+    const body = payload?.data?.body || payload?.notification?.body || '';
+    const type = payload?.data?.type || '';
+    const appointmentId = payload?.data?.appointmentId || '';
+    const messageId = payload?.messageId || payload?.data?.messageId || '';
+    const key = messageId || `${type}|${appointmentId}|${title}|${body}`;
+    if (!key) return false;
+
+    const now = Date.now();
+    const lastSeen = recentMessageKeysRef.current.get(key);
+    recentMessageKeysRef.current.set(key, now);
+
+    // Keep map bounded and clear stale keys.
+    for (const [k, ts] of recentMessageKeysRef.current.entries()) {
+      if (now - ts > 30000) recentMessageKeysRef.current.delete(k);
+    }
+
+    return typeof lastSeen === 'number' && now - lastSeen < 10000;
+  };
 
   useEffect(() => {
     if (!token || !user?.role || !['owner', 'employee'].includes(user.role)) return;
 
-    let unsub = () => {};
     let cancelled = false;
+    let unsub = null;
 
-    const initForeground = async () => {
-      unsub = await subscribeForegroundMessages((payload) => {
+    (async () => {
+      const foregroundUnsub = await subscribeForegroundMessages((payload) => {
         if (cancelled) return;
-        const title = payload?.notification?.title || 'Yeni bildirim';
-        const body = payload?.notification?.body;
+        if (isDuplicateMessage(payload)) return;
+
+        const title = payload?.data?.title || payload?.notification?.title || 'Yeni bildirim';
+        const body = payload?.data?.body || payload?.notification?.body;
         const text = body ? `${title}: ${body}` : title;
-        showForegroundSystemNotification(payload);
+        // When app is visible, toast is enough; avoid a second system popup.
+        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+          showForegroundSystemNotification(payload);
+        }
         toast(text, 'info');
       });
-    };
 
-    initForeground();
+      if (cancelled) {
+        if (typeof foregroundUnsub === 'function') foregroundUnsub();
+        return;
+      }
+
+      unsub = foregroundUnsub;
+    })();
 
     return () => {
       cancelled = true;
