@@ -337,7 +337,18 @@ const selectedTimeRangeLabel = selectedSlot
             ) : (
               <div className="grid grid-cols-3 gap-2">
                 {currentStaffSlots.map((slot, i) => {
-                  const isAvailable = slot.available !== false;
+                  const availabilityFlag = slot.available ?? slot.isAvailable ?? slot.is_available;
+                  const isAvailable = ![
+                    false,
+                    0,
+                    '0',
+                    'false',
+                    'FALSE',
+                    'no',
+                    'NO',
+                    'unavailable',
+                    'UNAVAILABLE',
+                  ].includes(availabilityFlag);
 
                   return (
                     <button
