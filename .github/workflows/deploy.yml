@@ -46,7 +46,7 @@ jobs:
 
             npm install
             npm run build
-            rm -rf /var/www/barberapp/*
-            cp -r dist/* /var/www/barberapp/
+            rm -rf /var/www/reservos/*
+            cp -r dist/* /var/www/reservos/
             systemctl reload nginx
             echo "🎨 Frontend başarıyla güncellendi!"
