@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import { TURKEY_CITIES } from '../../lib/cities';
 import Button from '../../components/Button';
@@ -551,6 +551,108 @@ const BlockSection = ({ shop, user, onUpdated }) => {
   );
 };
 
+// ─── Hatırlatma Tercihleri ──────────────────────────────────────────
+const ReminderPreferencesSection = () => {
+  const toast = useToast();
+  const [prefs, setPrefs] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchPreferences();
+  }, []);
+
+  const fetchPreferences = async () => {
+    try {
+      const res = await api.get('/notifications/reminder-preferences');
+      setPrefs(res.data);
+    } catch (err) {
+      console.error('Error fetching preferences:', err);
+      toast('Hatırlatma ayarları yüklenemedi.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async (field, value) => {
+    setSaving(true);
+    try {
+      const res = await api.put('/notifications/reminder-preferences', {
+        [field]: value,
+      });
+      setPrefs(res.data);
+      toast('Ayarlar kaydedildi.');
+    } catch (err) {
+      console.error('Error updating preferences:', err);
+      toast(err.response?.data?.error || 'Güncelleme başarısız.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="animate-spin h-6 w-6 border-4 border-zinc-900 dark:border-zinc-300 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (!prefs) {
+    return (
+      <div className="p-3 border border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 text-xs font-bold text-zinc-500 dark:text-zinc-400">
+        Ayarlar yüklenemedi.
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-4 space-y-3">
+      <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-2xl border-2 border-zinc-100 dark:border-zinc-800">
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={prefs.is_enabled}
+            onChange={e => handleUpdate('is_enabled', e.target.checked)}
+            disabled={saving}
+            className="w-5 h-5 rounded cursor-pointer"
+          />
+          <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+            Yaklaşan randevular için hatırlatma al
+          </span>
+        </label>
+      </div>
+
+      {prefs.is_enabled && (
+        <div>
+          <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 ml-1">
+            Hatırlatma Zamanı
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              max="120"
+              value={prefs.reminder_minutes_before}
+              onChange={e => handleUpdate('reminder_minutes_before', parseInt(e.target.value))}
+              disabled={saving}
+              className="w-24 p-3 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl text-sm font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:outline-none"
+            />
+            <span className="text-sm font-bold text-zinc-600 dark:text-zinc-300">dakika önce</span>
+          </div>
+          <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-2 px-1">
+            Randevu başlamadan {prefs.reminder_minutes_before} dakika önce bildirim alacaksınız.
+          </p>
+        </div>
+      )}
+
+      <div className="p-3 border border-zinc-200 dark:border-zinc-700 rounded-2xl bg-zinc-50 dark:bg-zinc-950 text-xs font-bold text-zinc-500 dark:text-zinc-400">
+        <p>💡 Hatırlatmaları açtığınızda, yaklaşan randevularınız hakkında zamanında haberdar olursunuz.</p>
+      </div>
+    </div>
+  );
+};
+
 // ─── Ana Ayarlar Tab ────────────────────────────────────────────────
 const SettingsTab = ({ shop, user, onShopUpdated }) => {
   const isOwner = user?.isOwner === true;
@@ -584,6 +686,10 @@ const SettingsTab = ({ shop, user, onShopUpdated }) => {
       )}
       <Section title="İzin / Blok Ekle" defaultOpen={!user?.isOwner}>
         <BlockSection shop={shop} user={user} onUpdated={onShopUpdated} />
+      </Section>
+
+      <Section title="Hatırlatma Ayarları">
+        <ReminderPreferencesSection />
       </Section>
     </div>
   );
