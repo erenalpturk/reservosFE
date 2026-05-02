@@ -315,7 +315,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
       <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
-        <div ref={topFixedRef} className="flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
+        <div ref={topFixedRef} className="relative z-40 flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
           {/* ── Satır 1: Başlık + Aksiyonlar ── */}
           <div className="flex justify-between items-center px-5 pt-5 pb-3 gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -374,7 +374,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 top-12 z-20 w-56 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-2">
+                <div className="absolute right-0 top-12 z-50 w-56 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl p-2">
                   <button
                     type="button"
                     onClick={() => {
