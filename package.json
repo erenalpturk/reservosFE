@@ -6,7 +6,6 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.21.0",
     "@tanstack/react-query": "^4.29.5",
     "axios": "^1.4.0",
     "firebase": "^11.6.1",
