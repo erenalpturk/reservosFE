@@ -26,8 +26,6 @@ const CustomerPage = () => {
   const [availability, setAvailability] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [contactInfo, setContactInfo] = useState({ fullName: '', phone: '' });
-  const [otpCode, setOtpCode] = useState('');
-  const [sentOtp, setSentOtp] = useState('');
   const [bookingCompleted, setBookingCompleted] = useState(false);
 
   // Tarih kısıtları: bugün - 14 gün ileri
@@ -83,26 +81,12 @@ const CustomerPage = () => {
     }
   };
 
-  const handleSendOtp = () => {
+  const handleContactContinue = () => {
     if (!contactInfo.phone || contactInfo.phone.length < 10 || !contactInfo.fullName) {
       toast('Telefon ve ad soyad zorunludur.');
       return;
     }
-    const testOtp = String(Math.floor(100000 + Math.random() * 900000));
-    setSentOtp(testOtp);
     setStep(6);
-  };
-
-  const handleVerifyOtp = () => {
-    if (otpCode.length !== 6) {
-      toast('Lütfen 6 haneli kodu girin.');
-      return;
-    }
-    if (otpCode !== sentOtp) {
-      toast('Kod hatalı. Tekrar deneyin.');
-      return;
-    }
-    setStep(7);
   };
 
   const handleCompleteBooking = async () => {
@@ -113,7 +97,6 @@ const CustomerPage = () => {
         : `+90${contactInfo.phone.replace(/^0/, '')}`;
       const payload = {
         phone: formattedPhone,
-        otpCode,
         fullName: contactInfo.fullName,
         businessId: shop.id,
         staffId: selectedStaff.id,
@@ -177,7 +160,7 @@ const selectedTimeRangeLabel = selectedSlot
   return (
     <div className="max-w-md mx-auto md:max-w-xl bg-white dark:bg-zinc-900 h-dvh overflow-hidden shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="bg-zinc-900 text-white p-8">
-        {!(step === 7 && bookingCompleted) && (
+        {!(step === 6 && bookingCompleted) && (
           <button
             onClick={step === 1 ? () => navigate('/book') : goBack}
             className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-1 hover:text-zinc-200 transition-colors"
@@ -191,7 +174,7 @@ const selectedTimeRangeLabel = selectedSlot
 
       <StepIndicator currentStep={step} />
 
-      {summaryItems.length > 0 && step !== 7 && (
+      {summaryItems.length > 0 && step !== 6 && (
         <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2">Seçim Özeti</p>
           <div className="space-y-1">
@@ -404,50 +387,16 @@ const selectedTimeRangeLabel = selectedSlot
               onChange={(e) => setContactInfo({ ...contactInfo, fullName: e.target.value })}
             />
             <Button
-              onClick={handleSendOtp}
-              loading={submitting}
-              className="mt-4"
-            >
-              Kod Gönder
-            </Button>
-          </div>
-        )}
-
-        {/* ADIM 6 — OTP Doğrulama */}
-        {step === 6 && (
-          <div className="animate-fadeIn">
-            <h2 className="text-xl font-black mb-6 uppercase tracking-tight">Doğrulama</h2>
-            <div className="mb-4 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-widest">
-              Test OTP: {sentOtp}
-            </div>
-            <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-4 px-1 uppercase tracking-widest">SMS ile gelen 6 haneli kodu girin</p>
-            <Input
-              placeholder="000000"
-              type="tel"
-              maxLength={6}
-              tracking
-              center
-              value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value)}
-            />
-            <Button
-              onClick={handleVerifyOtp}
-              loading={submitting}
+              onClick={handleContactContinue}
               className="mt-4"
             >
               Devam Et
             </Button>
-            <button
-              onClick={() => { setOtpCode(''); setSentOtp(''); setStep(5); }}
-              className="w-full mt-3 text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest py-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-            >
-              Kodu Tekrar Gönder
-            </button>
           </div>
         )}
 
-        {/* ADIM 7 — Onay / Başarı */}
-        {step === 7 && (
+        {/* ADIM 6 — Onay / Başarı */}
+        {step === 6 && (
           bookingCompleted ? (
             <div className="text-center py-8 animate-fadeIn">
               <div className="text-7xl mb-6">👊</div>
