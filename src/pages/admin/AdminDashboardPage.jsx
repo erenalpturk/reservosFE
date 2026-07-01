@@ -1166,7 +1166,7 @@ const BusinessSettingsTab = ({ shops, onUpdated }) => {
                     <Input value={serviceEditForm.name || ''} onChange={e => setServiceEditForm(f => ({ ...f, name: e.target.value }))} placeholder="Hizmet adı" />
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                       <Input type="number" value={serviceEditForm.durationMin || ''} onChange={e => setServiceEditForm(f => ({ ...f, durationMin: e.target.value }))} placeholder="Süre (dk)" />
-                      <Input type="number" value={serviceEditForm.bufferMin || ''} onChange={e => setServiceEditForm(f => ({ ...f, bufferMin: e.target.value }))} placeholder="Buffer (dk)" />
+                      <Input type="number" value={serviceEditForm.bufferMin || ''} onChange={e => setServiceEditForm(f => ({ ...f, bufferMin: e.target.value }))} placeholder="Mola (dk)" />
                       <button
                         type="button"
                         onClick={() => setServiceEditForm(f => ({ ...f, is_active: !f.is_active }))}

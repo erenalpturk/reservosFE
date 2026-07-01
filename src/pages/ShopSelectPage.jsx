@@ -35,7 +35,7 @@ const ShopSelectPage = () => {
   if (error) return <div className="p-20 text-red-500 text-center font-bold bg-zinc-50 dark:bg-zinc-950 min-h-screen">{error}</div>;
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-zinc-900 min-h-screen shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="max-w-md mx-auto md:max-w-2xl bg-white dark:bg-zinc-900 min-h-screen shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="bg-zinc-900 text-white p-8">
         <button
           onClick={() => selectedCity ? setSelectedCity(null) : navigate('/')}
@@ -53,7 +53,7 @@ const ShopSelectPage = () => {
 
       <div className="p-6 flex-1 bg-zinc-50 dark:bg-zinc-900 transition-colors">
         {!selectedCity ? (
-          <div className="space-y-3 animate-fadeIn">
+          <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 animate-fadeIn">
             {cities.map(city => (
               <Card
                 key={city}
@@ -68,7 +68,7 @@ const ShopSelectPage = () => {
             ))}
           </div>
         ) : (
-          <div className="space-y-3 animate-fadeIn">
+          <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 animate-fadeIn">
             {shopsInCity.map(shop => (
               <Card
                 key={shop.id}

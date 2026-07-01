@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../lib/api';
 import { TURKEY_CITIES } from '../../lib/cities';
 import Button from '../../components/Button';
 import { useToast } from '../../components/Toast';
 
-const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+const DAYS = ['PZT', 'SAL', 'ÇAR', 'PER', 'CUM', 'CMT', 'PAZ'];
 
 // Açılıp kapanabilen bölüm wrapper'ı
 const Section = ({ title, children, defaultOpen = false }) => {
@@ -26,9 +26,17 @@ const Section = ({ title, children, defaultOpen = false }) => {
 // ─── Dükkan Bilgileri ───────────────────────────────────────────────
 const ShopInfoSection = ({ shop, onUpdated, canEdit = true }) => {
   const toast = useToast();
-  const [form, setForm] = useState({ name: shop?.name || '', phone: shop?.phone || '', city: shop?.city || '', address: shop?.address || '' });
+  const [form, setForm] = useState({ name: '', phone: '', city: '', address: '' });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (shop && !initializedRef.current) {
+      initializedRef.current = true;
+      setForm({ name: shop.name || '', phone: shop.phone || '', city: shop.city || '', address: shop.address || '' });
+    }
+  }, [shop]);
 
   const bookingLink = shop?.slug
     ? `${window.location.origin}/book/${encodeURIComponent(shop.slug)}`
@@ -248,7 +256,7 @@ const BarbersSection = ({ shop, onUpdated }) => {
 const ServiceFields = [
   { label: 'Hizmet Adı', key: 'name', placeholder: 'Saç Kesimi', type: 'text' },
   { label: 'Süre (dk)', key: 'durationMin', placeholder: '30', type: 'number' },
-  { label: 'Buffer (dk)', key: 'bufferMin', placeholder: '5', type: 'number' },
+  { label: 'Mola (dk)', key: 'bufferMin', placeholder: '5', type: 'number' },
 ];
 
 const ServicesSection = ({ shop, onUpdated }) => {
@@ -436,7 +444,7 @@ const HoursSection = ({ shop, onUpdated }) => {
     <div className="pt-4 space-y-2">
       {hours.map((h, i) => (
         <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl ${h.is_closed ? 'bg-zinc-50 dark:bg-zinc-950 opacity-60' : 'bg-zinc-50 dark:bg-zinc-950'}`}>
-          <div className="w-20 text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300 flex-shrink-0">{DAYS[i]}</div>
+          <div className="w-10 text-xs font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-300 flex-shrink-0">{DAYS[i]}</div>
           <input
             type="checkbox"
             checked={h.is_closed}
@@ -666,31 +674,39 @@ const SettingsTab = ({ shop, user, onShopUpdated }) => {
   }
 
   return (
-    <div className="px-6 pb-10">
-      <Section title="Dükkan Bilgileri" defaultOpen>
-        <ShopInfoSection shop={shop} onUpdated={onShopUpdated} canEdit={isOwner} />
-      </Section>
+    <div className="px-1 pb-10 md:grid md:grid-cols-2 md:gap-x-6 md:items-start md:px-4">
+      <div>
+        <Section title="Dükkan Bilgileri" defaultOpen>
+          <ShopInfoSection shop={shop} onUpdated={onShopUpdated} canEdit={isOwner} />
+        </Section>
 
-      {isOwner && (
-        <>
+        {isOwner && (
           <Section title="Personeller">
             <BarbersSection shop={shop} onUpdated={onShopUpdated} />
           </Section>
-          <Section title="Hizmetler">
-            <ServicesSection shop={shop} onUpdated={onShopUpdated} />
-          </Section>
-          <Section title="Çalışma Saatleri">
-            <HoursSection shop={shop} onUpdated={onShopUpdated} />
-          </Section>
-        </>
-      )}
-      <Section title="İzin / Blok Ekle" defaultOpen={!user?.isOwner}>
-        <BlockSection shop={shop} user={user} onUpdated={onShopUpdated} />
-      </Section>
+        )}
 
-      <Section title="Hatırlatma Ayarları">
-        <ReminderPreferencesSection />
-      </Section>
+        <Section title="İzin / Blok Ekle" defaultOpen={!user?.isOwner}>
+          <BlockSection shop={shop} user={user} onUpdated={onShopUpdated} />
+        </Section>
+      </div>
+
+      <div>
+        {isOwner && (
+          <>
+            <Section title="Hizmetler">
+              <ServicesSection shop={shop} onUpdated={onShopUpdated} />
+            </Section>
+            <Section title="Çalışma Saatleri">
+              <HoursSection shop={shop} onUpdated={onShopUpdated} />
+            </Section>
+          </>
+        )}
+
+        <Section title="Hatırlatma Ayarları">
+          <ReminderPreferencesSection />
+        </Section>
+      </div>
     </div>
   );
 };

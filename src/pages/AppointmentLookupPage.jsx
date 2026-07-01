@@ -112,7 +112,7 @@ const AppointmentLookupPage = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-zinc-900 min-h-screen shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="max-w-md mx-auto md:max-w-lg bg-white dark:bg-zinc-900 min-h-screen shadow-2xl flex flex-col animate-fadeIn text-zinc-900 dark:text-zinc-100 transition-colors">
       <div className="bg-zinc-900 text-white p-8">
         <button
           onClick={() => navigate('/')}

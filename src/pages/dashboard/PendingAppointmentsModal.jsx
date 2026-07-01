@@ -48,7 +48,7 @@ const PendingAppointmentsModal = ({
         className="absolute inset-0 bg-black/40"
       />
 
-      <div className="relative w-full max-w-md max-h-[82dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-fadeIn">
+      <div className="relative w-full max-w-md md:max-w-2xl max-h-[82dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-fadeIn">
         {/* Başlık */}
         <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-zinc-100">
           <div>

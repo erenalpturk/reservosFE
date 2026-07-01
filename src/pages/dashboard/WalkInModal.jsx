@@ -289,9 +289,9 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
   const endsAtPreview = computeEndsAt(form.startsAt);
 
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60" />
-      <div className="relative z-10 h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain bg-white dark:bg-zinc-900 p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100">
+    <div className="fixed inset-0 z-50 md:flex md:items-center md:justify-center">
+      <div className="absolute inset-0 z-0 bg-black/40 dark:bg-black/60" onClick={!submitting ? handleClose : undefined} />
+      <div className="relative z-10 h-full w-full overflow-y-auto overflow-x-hidden overscroll-contain bg-white dark:bg-zinc-900 p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-100 md:h-auto md:max-h-[90dvh] md:w-full md:max-w-lg md:rounded-3xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black uppercase tracking-tight">Randevusuz Ekle</h2>
           <button disabled={submitting} onClick={handleClose} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 font-black text-xl leading-none disabled:opacity-50">✕</button>

@@ -262,6 +262,10 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
   useLayoutEffect(() => {
     const updateContentHeight = () => {
+      if (window.innerWidth >= 768) {
+        setContentHeight(undefined);
+        return;
+      }
       const topHeight = topFixedRef.current?.offsetHeight || 0;
       const bottomHeight = tab === 'program' ? (bottomFixedRef.current?.offsetHeight || 0) : 0;
       setContentHeight(`calc(100dvh - ${topHeight + bottomHeight}px)`);
@@ -312,7 +316,7 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
 
   return (
     <div className="bg-zinc-50 dark:bg-zinc-950 h-dvh w-full overflow-hidden text-zinc-900 dark:text-zinc-100 transition-colors">
-      <div className="w-full max-w-md mx-auto h-full min-h-0 flex flex-col">
+      <div className="w-full max-w-md mx-auto md:max-w-5xl h-full min-h-0 flex flex-col">
 
         {/* Üst sabit blok */}
         <div ref={topFixedRef} className="relative z-50 flex-shrink-0 bg-zinc-50/95 dark:bg-zinc-950/90 backdrop-blur border-b border-zinc-100 dark:border-zinc-800">
@@ -529,52 +533,103 @@ const DashboardPage = ({ isDark, onToggleTheme }) => {
           )}
         </div>
 
-        {/* Orta scroll alanı */}
-        {tab === 'program' ? (
-          <div className="relative min-h-0 overflow-hidden px-5 pt-3 pb-3" style={{ height: contentHeight }}>
-            {viewMode === 'day'
-              ? <DayView currentUser={user} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
-              : <WeekView weekDays={weekDays} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
-            }
-            {isRefreshingAppointments && !isInitialAppointmentsLoading && (
-              <div className="pointer-events-none absolute right-6 bottom-4 z-10">
-                <span className="inline-flex rounded-full bg-white/90 dark:bg-zinc-900/90 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 shadow-sm animate-pulse">
-                  Yenileniyor...
-                </span>
+        {/* Orta alan — desktop: sidebar nav solda, içerik sağda */}
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row md:overflow-hidden">
+
+          {/* Desktop sidebar nav */}
+          <nav className="hidden md:flex md:flex-col md:w-52 md:flex-shrink-0 md:border-r md:border-zinc-200 md:dark:border-zinc-800 md:bg-white md:dark:bg-zinc-950 md:py-3 md:px-3 md:gap-1">
+            {[
+              { id: 'program', label: 'Program', icon: '📅' },
+              { id: 'gecmis', label: 'Geçmiş', icon: '🕐' },
+              { id: 'ayarlar', label: 'Ayarlar', icon: '⚙️' },
+            ].map(({ id, label, icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left transition-all ${
+                  tab === id
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                <span>{icon}</span>
+                <span>{label}</span>
+                {id === 'program' && attentionCount > 0 && (
+                  <span className="ml-auto px-1.5 py-0.5 bg-orange-400 text-white rounded-full text-[9px] font-black">
+                    {attentionCount}
+                  </span>
+                )}
+              </button>
+            ))}
+
+            {/* Desktop alt özet (sadece program sekmesinde) */}
+            {tab === 'program' && (
+              <div className="mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="text-[8px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 px-1 mb-2">
+                  {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {programSummary.map(({ label, count, cls }) => (
+                    <div key={label} className="bg-zinc-50 dark:bg-zinc-900 rounded-xl p-2 border border-zinc-100 dark:border-zinc-700 text-center">
+                      <div className={`text-base font-black ${cls}`}>{count}</div>
+                      <div className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </nav>
+
+          {/* İçerik alanı */}
+          <div className="flex-1 min-h-0 flex flex-col md:overflow-hidden">
+            {tab === 'program' ? (
+              <div className="relative min-h-0 overflow-hidden px-5 pt-3 pb-3 md:flex-1" style={{ height: contentHeight }}>
+                {viewMode === 'day'
+                  ? <DayView currentUser={user} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onTimeClick={(t) => { setWalkInStartsAt(t); setShowWalkIn(true); }} date={date} expandGaps={expandGaps} highlightApptId={highlightApptId} highlightTick={highlightTick} />
+                  : <WeekView weekDays={weekDays} appointments={calendarAppointments} loading={isInitialAppointmentsLoading} onSelect={setSelectedAppt} onDayClick={handleDayClick} startHour={startHour} endHour={endHour} />
+                }
+                {isRefreshingAppointments && !isInitialAppointmentsLoading && (
+                  <div className="pointer-events-none absolute right-6 bottom-4 z-10">
+                    <span className="inline-flex rounded-full bg-white/90 dark:bg-zinc-900/90 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 shadow-sm animate-pulse">
+                      Yenileniyor...
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : tab === 'gecmis' ? (
+              <div className="min-h-0 overflow-y-auto px-5 py-4 md:flex-1" style={{ height: contentHeight }}>
+                <HistoryTab appointments={historyAppointments} loading={isHistoryLoading} onSelect={setSelectedAppt} />
+              </div>
+            ) : (
+              <div className="min-h-0 overflow-y-auto px-5 py-4 md:flex-1" style={{ height: contentHeight }}>
+                <SettingsTab shop={shop} user={user} onShopUpdated={fetchShop} />
+              </div>
+            )}
+
+            {/* Alt özet — mobil */}
+            {tab === 'program' && (
+              <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/90 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:hidden">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                    {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                    {summaryTitle}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {programSummary.map(({ label, count, cls }) => (
+                    <div key={label} className="flex-1 bg-white dark:bg-zinc-900 rounded-xl p-2 border border-zinc-100 dark:border-zinc-700 text-center">
+                      <div className={`text-base font-black ${cls}`}>{count}</div>
+                      <div className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-        ) : tab === 'gecmis' ? (
-          <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
-            <HistoryTab appointments={historyAppointments} loading={isHistoryLoading} onSelect={setSelectedAppt} />
-          </div>
-        ) : (
-          <div className="min-h-0 overflow-y-auto px-5 py-4" style={{ height: contentHeight }}>
-            <SettingsTab shop={shop} user={user} onShopUpdated={fetchShop} />
-          </div>
-        )}
-
-        {/* Alt özet */}
-        {tab === 'program' && (
-          <div ref={bottomFixedRef} className="flex-shrink-0 border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/90 backdrop-blur px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-            <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                {viewMode === 'day' ? 'Gün Özeti' : 'Hafta Özeti'}
-              </span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                {summaryTitle}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              {programSummary.map(({ label, count, cls }) => (
-                <div key={label} className="flex-1 bg-white dark:bg-zinc-900 rounded-xl p-2 border border-zinc-100 dark:border-zinc-700 text-center">
-                  <div className={`text-base font-black ${cls}`}>{count}</div>
-                  <div className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {showPendingModal && (

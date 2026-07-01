@@ -157,9 +157,9 @@ const DetailModal = ({ appt, user, businessStaff, onClose, onAction, onCancel, o
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
         <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-        <div className="relative w-full max-w-md bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-900">
+        <div className="relative w-full max-w-md md:max-w-lg md:rounded-3xl md:max-h-[90dvh] md:overflow-y-auto bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-fadeIn text-zinc-900 dark:text-zinc-900">
 
           {/* Başlık satırı */}
           <div className="flex justify-between items-start mb-4">
