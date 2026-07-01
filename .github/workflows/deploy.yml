@@ -3,7 +3,7 @@ name: Otomatik Sunucu Deploy
 on:
   push:
     branches:
-      - main  # Hangi branch'e push atınca çalışmasını istiyorsan (örn: master veya main)
+      - main
 
 jobs:
   deploy:
@@ -16,18 +16,20 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Backend Güncelleme
-            cd /root/aet/reservos/reservosBE
-            git pull origin main
-            npm install
-            pm2 restart all
-            echo "⚙️ Backend başarıyla güncellendi!"
+            # 1. Klasör Kontrolü ve Repo Klonlama (Eğer ilk defa kuruluyorsa)
+            if [ ! -d "/srv/hosting/reservosFE" ]; then
+              echo "📂 ReservosFE ilk defa klonlanıyor..."
+              # NOT: Eğer repo private ise sunucuda SSH anahtarı tanımlı olmalıdır.
+              # repourl kısmını kendi frontend repo adresinizle değiştirin:
+              git clone https://github.com/erenalpturk/reservosFE.git /srv/hosting/reservosFE
+            fi
 
-            # 2. Frontend Güncelleme
-            cd /root/aet/reservos/reservosFE
+            # 2. Frontend Güncelleme Alanına Giriş
+            cd /srv/hosting/reservosFE
+            git reset --hard origin/main
             git pull origin main
 
-            # Frontend env dosyasini her deploy'da secrets ile olustur
+            # Frontend .env dosyasını oluşturma
             cat > .env <<EOF
             VITE_API_URL=${{ secrets.VITE_API_URL }}
             VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -44,9 +46,15 @@ jobs:
               exit 1
             fi
 
-            npm install
+            # 3. Bağımlılıkları Kurma ve Derleme (Build)
+            npm ci
             npm run build
+
+            # 4. Canlı Klasöre Taşıma ve Nginx Temizliği
             rm -rf /var/www/reservos/*
             cp -r dist/* /var/www/reservos/
-            systemctl reload nginx
-            echo "🎨 Frontend başarıyla güncellendi!"
+            
+            # Docker içindeki Nginx'i tetikliyoruz (Ana makine servis sistemini değil)
+            docker exec hosting-nginx-1 nginx -s reload
+            
+            echo "🎨 Frontend başarıyla güncellendi ve yayına alındı!"
