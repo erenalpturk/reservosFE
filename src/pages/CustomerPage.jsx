@@ -10,7 +10,7 @@ import { useToast } from '../components/Toast';
 const formatSlotTime = (iso) => new Date(iso).toLocaleTimeString('tr-TR', {
   hour: '2-digit',
   minute: '2-digit',
-  timeZone: 'UTC',
+  timeZone: 'Europe/Istanbul',
 });
 
 const CustomerPage = () => {
