@@ -150,10 +150,19 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
     (sum, s) => sum + (s.duration_min || 0) + (s.buffer_min || 0), 0
   );
 
+  const toTurkeyIso = (dateTimeLocalValue) => {
+    // datetime-local string ("YYYY-MM-DDTHH:MM") → "+03:00" offset'li ISO string
+    // new Date(dateTimeLocal) sistem saatine göre parse eder, toISOString() UTC'ye çevirir.
+    // Bunun yerine direkt "+03:00" ekleyerek Türkiye saatini koruyoruz.
+    return `${dateTimeLocalValue}:00+03:00`;
+  };
+
   const computeEndsAt = (startsAt) => {
     if (!startsAt || totalDuration === 0) return null;
-    const start = new Date(startsAt);
-    return new Date(start.getTime() + totalDuration * 60 * 1000).toISOString();
+    const start = new Date(toTurkeyIso(startsAt));
+    const end = new Date(start.getTime() + totalDuration * 60 * 1000);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}:00+03:00`;
   };
 
   const toggleService = (id) => {
@@ -216,8 +225,8 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       return;
     }
 
-    const startsAtDate = new Date(form.startsAt);
-    if (Number.isNaN(startsAtDate.getTime())) {
+    const startsAtIso = toTurkeyIso(form.startsAt);
+    if (Number.isNaN(new Date(startsAtIso).getTime())) {
       toast('Baslangic saati gecersiz.');
       return;
     }
@@ -236,7 +245,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
       const response = await api.post('/appointments/walk-in', {
         staffId: targetStaffId || undefined,
         serviceIds: selectedServiceIds.filter(id => id !== DIGER_ID),
-        startsAt: startsAtDate.toISOString(),
+        startsAt: startsAtIso,
         endsAt,
         fullName,
         phone: phone || undefined,
@@ -249,7 +258,7 @@ const WalkInModal = ({ shop, currentUser, onClose, onSuccess, initialStartsAt })
 
       const optimisticAppointment = {
         id: response?.data?.appointmentId || `walk-in-${Date.now()}`,
-        starts_at: startsAtDate.toISOString(),
+        starts_at: startsAtIso,
         ends_at: endsAt,
         status: 'confirmed',
         source: 'walk_in',
