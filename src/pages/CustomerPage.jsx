@@ -7,6 +7,12 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import { useToast } from '../components/Toast';
 
+const formatSlotTime = (iso) => new Date(iso).toLocaleTimeString('tr-TR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'UTC',
+});
+
 const CustomerPage = () => {
   const { shopSlug } = useParams();
   const navigate = useNavigate();
@@ -128,16 +134,15 @@ const CustomerPage = () => {
     ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString('tr-TR', { weekday: 'long', day: '2-digit', month: 'long' })
     : null;
   const selectedTimeLabel = selectedSlot
-    ? new Date(selectedSlot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    ? formatSlotTime(selectedSlot.startsAt)
     : null;
-const selectedTimeRangeLabel = selectedSlot
+  const selectedTimeRangeLabel = selectedSlot
     ? (() => {
         const start = new Date(selectedSlot.startsAt).getTime();
         const end = new Date(start + totalDurationMin * 60 * 1000);
-        
-        const formatOptions = { hour: '2-digit', minute: '2-digit' };
-        const startTime = new Date(start).toLocaleTimeString('tr-TR', formatOptions);
-        const endTime = end.toLocaleTimeString('tr-TR', formatOptions);
+
+        const startTime = formatSlotTime(new Date(start).toISOString());
+        const endTime = formatSlotTime(end.toISOString());
 
         return `${startTime} - ${endTime}`;
       })()
@@ -349,7 +354,7 @@ const selectedTimeRangeLabel = selectedSlot
                           : 'border-zinc-100 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-600 opacity-45 cursor-not-allowed'
                       }`}
                     >
-                      {new Date(slot.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      {formatSlotTime(slot.startsAt)}
                     </button>
                   );
                 })}
