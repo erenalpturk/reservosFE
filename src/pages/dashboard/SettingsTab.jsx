@@ -361,7 +361,7 @@ const ServicesSection = ({ shop, onUpdated }) => {
               <div>
                 <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{s.name}</div>
                 <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                  {s.duration_min} dk + {s.buffer_min} dk buffer
+                  {s.duration_min} dk + {s.buffer_min} dk mola
                 </div>
               </div>
               <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Düzenle ›</span>
