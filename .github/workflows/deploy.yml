@@ -16,18 +16,18 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Klasör Kontrolü ve Repo Klonlama (Eğer ilk defa kuruluyorsa)
+            # 1. Klasör Kontrolü ve Repo Klonlama (Yeni SSH Köprüsü ile)
             if [ ! -d "/srv/hosting/reservosFE" ]; then
               echo "📂 ReservosFE ilk defa klonlanıyor..."
-              # NOT: Eğer repo private ise sunucuda SSH anahtarı tanımlı olmalıdır.
-              # repourl kısmını kendi frontend repo adresinizle değiştirin:
-              git clone https://github.com/erenalpturk/reservosFE.git /srv/hosting/reservosFE
+              git clone git@github.com-reservos-fe:erenalpturk/reservosFE.git /srv/hosting/reservosFE
             fi
 
             # 2. Frontend Güncelleme Alanına Giriş
             cd /srv/hosting/reservosFE
+            
+            # Önce uzaktaki güncel commit'leri getir, sonra yereli ez
+            git fetch --all
             git reset --hard origin/main
-            git pull origin main
 
             # Frontend .env dosyasını oluşturma
             cat > .env <<EOF
@@ -51,10 +51,13 @@ jobs:
             npm run build
 
             # 4. Canlı Klasöre Taşıma ve Nginx Temizliği
+            # Hedef klasör yoksa oluştur
+            mkdir -p /var/www/reservos
+            
             rm -rf /var/www/reservos/*
             cp -r dist/* /var/www/reservos/
             
-            # Docker içindeki Nginx'i tetikliyoruz (Ana makine servis sistemini değil)
+            # Docker içindeki Nginx'i tetikliyoruz
             docker exec hosting-nginx-1 nginx -s reload
             
             echo "🎨 Frontend başarıyla güncellendi ve yayına alındı!"
